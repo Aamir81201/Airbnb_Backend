@@ -35,7 +35,9 @@ namespace Airbnb.Web.Auth
             var authClaims = new List<Claim>()
             {
                 new Claim("Roles", userAuth.Role.ToString()),
-                new Claim("userId",  userAuth.UserId.ToString())
+                new Claim("userId",  userAuth.UserId.ToString()),
+                new Claim("name", userAuth.FirstName),
+                new Claim("email", userAuth.Email),
             };
 
             var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JwtSettings:Secret"]));

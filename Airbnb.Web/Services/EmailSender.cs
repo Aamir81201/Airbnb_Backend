@@ -1,8 +1,10 @@
-﻿using MailKit.Net.Smtp;
+﻿using Airbnb.Common.Enum;
+using MailKit.Net.Smtp;
 using Microsoft.Extensions.Options;
 using MimeKit;
 using SendGrid;
 using SendGrid.Helpers.Mail;
+using System.Web;
 
 namespace Airbnb.Web.Services
 {
@@ -12,9 +14,53 @@ namespace Airbnb.Web.Services
 
         private readonly EmailConfiguration _emailConfig;
 
+
+
         public EmailSender(EmailConfiguration emailConfig)
         {
             _emailConfig = emailConfig;
+        }
+        public EmailMessage GenerateEmailMessage(string email, string name, string token, EmailType emailType)
+        {
+            var link = new UriBuilder("http://localhost:4200");
+
+            var subject = "Email from Airbnb";
+            var template = "";
+
+            switch (emailType)
+            {
+                case EmailType.EmailVerification:
+                    link = new UriBuilder("http://localhost:4200/email-verification");
+                    subject = "Please confirm your email address";
+                    template = "EmailReminderTemplate.html";
+                    break;
+                case EmailType.PasswordReset:
+                    link = new UriBuilder("http://localhost:4200/reset-password");
+                    subject = "Reset your password";
+                    template = "EmailResetPasswordTemplate.html";
+                    break;
+                default:
+                    break;
+            }
+
+            // Set query parameters
+            var query = HttpUtility.ParseQueryString(link.Query);
+            query["token"] = token;
+            query["email"] = email;
+            link.Query = query.ToString();
+
+            var pathToFile = Path.GetFullPath(Directory.GetCurrentDirectory() + "/Services/" + template);
+
+            BodyBuilder builder = new BodyBuilder();
+
+            using (StreamReader sr = new StreamReader(pathToFile))
+            {
+                builder.HtmlBody = sr.ReadToEnd();
+            }
+
+            string content = string.Format(builder.HtmlBody, name, link);
+
+            return new EmailMessage(new string[] { email }, subject, content);
         }
 
         /// <summary>
@@ -59,7 +105,7 @@ namespace Airbnb.Web.Services
         /// </summary>
         /// <param name="mailMessage">MimeMessage object returned from CreateEmailMessage method</param>
         private void Send(MimeMessage mailMessage)
-        {
+            {
             using var client = new SmtpClient();
             try
             {

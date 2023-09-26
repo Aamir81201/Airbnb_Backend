@@ -8,6 +8,7 @@ using Google.Apis.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.Web;
 
 namespace Airbnb.Web.Controllers
 {
@@ -62,7 +63,7 @@ namespace Airbnb.Web.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest();
             }
         }
 
@@ -84,7 +85,7 @@ namespace Airbnb.Web.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest();
             }
         }
 
@@ -104,11 +105,11 @@ namespace Airbnb.Web.Controllers
                         return Ok(jwtToken);
                     }
                 }
-                return BadRequest("Invalid login details.");
+                return BadRequest(new { title = "Invalid", message = "Invalid login details. Please try again." });
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest();
             }
         }
 
@@ -161,7 +162,7 @@ namespace Airbnb.Web.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest();
             }
         }
 
@@ -188,24 +189,24 @@ namespace Airbnb.Web.Controllers
                     await signManager.SignInAsync(user, false);
 
                     var token = await userManager.GenerateEmailConfirmationTokenAsync(user);
-                    var confirmationLink = $"http://localhost:4200?token={token}&email={user.Email}";
-                    //var confirmationLink = Url.Action(nameof(ConfirmEmail), "Auth", new { token, email = user.Email }, Request.Scheme);
-                    var message = new EmailMessage(new string[] { user.Email }, "Confirmation email link", confirmationLink);
+
                     var emailConfiguration = configuration.GetSection(nameof(EmailConfiguration)).Get<EmailConfiguration>();
                     var emailSender = new EmailSender(emailConfiguration);
-                    emailSender.SendEmailAsync(message);
+                    var message = emailSender.GenerateEmailMessage(user.Email, user.FirstName, token, EmailType.EmailVerification);
+                    var ismailSent = await emailSender.SendEmailAsync(message);
 
                     string jwtToken = await authService.GenerateToken(user);
+
                     return Ok(jwtToken);
                 }
                 else
                 {
-                    return BadRequest(result.Errors);
+                    return BadRequest();
                 }
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest();
             }
         }
 
@@ -264,7 +265,7 @@ namespace Airbnb.Web.Controllers
                         }
                     }
                 }
-                return BadRequest("Something Went really wrong");
+                return BadRequest();
             }
             catch (Exception ex)
             {
@@ -303,11 +304,10 @@ namespace Airbnb.Web.Controllers
 
                                 await userManager.CreateAsync(user);
                                 var token = await userManager.GenerateEmailConfirmationTokenAsync(user);
-                                var confirmationLink = $"http://localhost:4200?token={token}&email={user.Email}";
-                                var message = new EmailMessage(new string[] { user.Email }, "Confirmation email link", confirmationLink);
                                 var emailConfiguration = configuration.GetSection(nameof(EmailConfiguration)).Get<EmailConfiguration>();
                                 var emailSender = new EmailSender(emailConfiguration);
-                                emailSender.SendEmailAsync(message);
+                                var message = emailSender.GenerateEmailMessage(user.Email, user.FirstName, token, EmailType.EmailVerification);
+                                var ismailSent = await emailSender.SendEmailAsync(message);
                                 await userManager.AddToRoleAsync(user, Role.User.ToString());
                                 await userManager.AddLoginAsync(user, info);
 
@@ -326,19 +326,32 @@ namespace Airbnb.Web.Controllers
             }
         }
 
-        //public async Task<IActionResult> SendConfirmationEmail(ApplicationUser user)
-        //{
-        //    var token = await userManager.GenerateEmailConfirmationTokenAsync(user);
-        //    var confirmationLink = Url.Action(nameof(ConfirmEmail), "Auth", new { token, email = user.Email }, Request.Scheme);
-        //    var message = new EmailMessage(new string[] { user.Email }, "Confirmation email link", confirmationLink);
-        //    var emailConfiguration = configuration.GetSection(nameof(EmailConfiguration)).Get<EmailConfiguration>();
-        //    var emailSender = new EmailSender(emailConfiguration);
-        //    await emailSender.SendEmailAsync(message);
-        //    return Ok();
-        //}
+        [HttpGet("SendResetPasswordMail")]
+        public async Task<IActionResult> SendResetPasswordMail(string email)
+        {
+            try
+            {
+                var user = await userManager.FindByEmailAsync(email);
+                if (user == null)
+                {
+                    return Ok(false);
+                }
+                var token = await userManager.GeneratePasswordResetTokenAsync(user);
+                var emailConfiguration = configuration.GetSection(nameof(EmailConfiguration)).Get<EmailConfiguration>();
+                var emailSender = new EmailSender(emailConfiguration);
+                var message = emailSender.GenerateEmailMessage(user.Email, user.FirstName, token, EmailType.PasswordReset);
+                var ismailSent = await emailSender.SendEmailAsync(message);
+
+                return Ok(true);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest();
+            }
+        }
 
         [HttpGet("ConfirmEmail")]
-        public async Task<IActionResult> ConfirmEmail(string email = "sds", string token = "f")
+        public async Task<IActionResult> ConfirmEmail(string email, string token)
         {
             var user = await userManager.FindByEmailAsync(email);
             if (user != null)
@@ -350,6 +363,58 @@ namespace Airbnb.Web.Controllers
                 }
             }
             return BadRequest();
+        }
+
+        [HttpGet("VerifyResetPassword")]
+        public async Task<IActionResult> VerifyResetPassword(string email, string token)
+        {
+            var user = await userManager.FindByEmailAsync(email);
+            if (user != null)
+            {
+                var isTokenValid = await userManager.VerifyUserTokenAsync(user, userManager.Options.Tokens.PasswordResetTokenProvider, "ResetPassword", token);
+                if (isTokenValid)
+                {
+                    var userAuth = new UserAuthModel()
+                    {
+                        UserId = user.Id,
+                        Email = user.Email,
+                        FirstName = user.FirstName,
+                        LastName = user.LastName
+                    };
+                    return Ok(userAuth);
+                }
+                BadRequest();
+            }
+            return BadRequest();
+        }
+
+        [HttpPost("ResetPassword")]
+        public async Task<IActionResult> ResetPassword(UserResetPasswordModel resetPassword)
+        {
+            try
+            {
+                var user = await userManager.FindByEmailAsync(resetPassword.Email);
+                var PasswordResult = await signManager.CheckPasswordSignInAsync(user, resetPassword.NewPassword, true);
+                if (PasswordResult.Succeeded)
+                {
+                    return BadRequest(new { title = "Invalid", message = "Your new password cannot be the same as the old password." });
+                }
+                var result = await userManager.ResetPasswordAsync(user, resetPassword.Token, resetPassword.NewPassword);
+
+                if (result.Succeeded)
+                {
+                    string jwtToken = await authService.GenerateToken(user);
+                    return Ok(jwtToken);
+                }
+                else
+                {
+                    return BadRequest();
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest();
+            }
         }
     }
 }

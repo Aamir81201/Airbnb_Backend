@@ -38,6 +38,17 @@ builder.Services
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:Secret"]))
         };
     });
+
+builder.Services.Configure<IdentityOptions>(options =>
+{
+    // Default Password settings.
+    options.Password.RequireDigit = false;
+    options.Password.RequireLowercase = false;
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequireUppercase = false;
+    options.Password.RequiredLength = 8;
+    options.Password.RequiredUniqueChars = 1;
+});
 //.AddGoogle(googleOptions =>
 //{
 //    googleOptions.ClientId = builder.Configuration["Authentication:Google:ClientId"];
