@@ -57,14 +57,24 @@ namespace Airbnb.Web.Auth
 
         public async Task<GoogleJsonWebSignature.Payload> VerifyGoogleToken(UserExternalAuthModel userExternalAuth)
         {
-            GoogleJsonWebSignature.ValidationSettings settings = new GoogleJsonWebSignature.ValidationSettings();
+            try
+            {
+                GoogleJsonWebSignature.ValidationSettings settings = new GoogleJsonWebSignature.ValidationSettings();
 
-            // Change this to your google client ID
-            settings.Audience = new List<string>() { configuration.GetValue<string>("Authentication:Google:ClientId") };
+                // Change this to your google client ID
+                settings.Audience = new List<string>() { configuration.GetValue<string>("Authentication:Google:ClientId") };
 
-            GoogleJsonWebSignature.Payload? payload = await GoogleJsonWebSignature.ValidateAsync(userExternalAuth.TokenId, settings);
+                // Syncronize my local time with google server...(as the time difference is 1sec so it throws error.)
+                await Task.Delay(1000);
 
-            return payload;
+                GoogleJsonWebSignature.Payload? payload = GoogleJsonWebSignature.ValidateAsync(userExternalAuth.TokenId, settings).Result;
+
+                return payload;
+            } catch (Exception ex)
+            {
+                throw;
+            }
+            
         }
     }
 }

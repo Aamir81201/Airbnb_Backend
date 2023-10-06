@@ -5,6 +5,7 @@ using MimeKit;
 using SendGrid;
 using SendGrid.Helpers.Mail;
 using System.Web;
+using Microsoft.AspNetCore.Hosting;
 
 namespace Airbnb.Web.Services
 {
@@ -14,14 +15,18 @@ namespace Airbnb.Web.Services
 
         private readonly EmailConfiguration _emailConfig;
 
+        private IWebHostEnvironment _environment;
 
-
-        public EmailSender(EmailConfiguration emailConfig)
+        public EmailSender(EmailConfiguration emailConfig, IWebHostEnvironment environment)
         {
             _emailConfig = emailConfig;
+            _environment = environment;
         }
         public EmailMessage GenerateEmailMessage(string email, string name, string token, EmailType emailType)
         {
+            try
+            {
+
             var link = new UriBuilder("http://localhost:4200");
 
             var subject = "Email from Airbnb";
@@ -48,8 +53,9 @@ namespace Airbnb.Web.Services
             query["token"] = token;
             query["email"] = email;
             link.Query = query.ToString();
-
-            var pathToFile = Path.GetFullPath(Directory.GetCurrentDirectory() + "/Services/" + template);
+            string wwwPath = _environment.WebRootPath;
+            string contentPath = _environment.ContentRootPath;
+            var pathToFile = Path.Combine(contentPath, "AppData/EmailTemplates/" + template);
 
             BodyBuilder builder = new BodyBuilder();
 
@@ -61,6 +67,12 @@ namespace Airbnb.Web.Services
             string content = string.Format(builder.HtmlBody, name, link);
 
             return new EmailMessage(new string[] { email }, subject, content);
+
+            }
+            catch
+            {
+                throw;
+            }
         }
 
         /// <summary>
@@ -80,7 +92,7 @@ namespace Airbnb.Web.Services
             }
             catch
             {
-                return false;
+                throw;
             }
         }
 

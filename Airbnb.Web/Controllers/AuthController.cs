@@ -23,9 +23,10 @@ namespace Airbnb.Web.Controllers
         private readonly UserManager<ApplicationUser> userManager;
         private readonly SignInManager<ApplicationUser> signManager;
         private readonly RoleManager<IdentityRole<Guid>> roleManager;
+        private readonly IWebHostEnvironment environment;
 
 
-        public AuthController(IUnitOfWork unitOfWork, IConfiguration configuration, UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signManager, RoleManager<IdentityRole<Guid>> roleManager)
+        public AuthController(IUnitOfWork unitOfWork, IConfiguration configuration, UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signManager, RoleManager<IdentityRole<Guid>> roleManager, IWebHostEnvironment environment)
         {
             this.unitOfWork = unitOfWork;
             this.configuration = configuration;
@@ -33,6 +34,7 @@ namespace Airbnb.Web.Controllers
             this.userManager = userManager;
             this.signManager = signManager;
             this.roleManager = roleManager;
+            this.environment = environment;
         }
 
         [HttpGet("IsUserExists")]
@@ -63,7 +65,7 @@ namespace Airbnb.Web.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest();
+                return BadRequest(ex);
             }
         }
 
@@ -191,7 +193,7 @@ namespace Airbnb.Web.Controllers
                     var token = await userManager.GenerateEmailConfirmationTokenAsync(user);
 
                     var emailConfiguration = configuration.GetSection(nameof(EmailConfiguration)).Get<EmailConfiguration>();
-                    var emailSender = new EmailSender(emailConfiguration);
+                    var emailSender = new EmailSender(emailConfiguration, environment);
                     var message = emailSender.GenerateEmailMessage(user.Email, user.FirstName, token, EmailType.EmailVerification);
                     var ismailSent = await emailSender.SendEmailAsync(message);
 
@@ -265,11 +267,11 @@ namespace Airbnb.Web.Controllers
                         }
                     }
                 }
-                return BadRequest();
+                return BadRequest("I dont know");
             }
             catch (Exception ex)
             {
-                return BadRequest();
+                return BadRequest("Something teribble");
             }
         }
 
@@ -305,7 +307,7 @@ namespace Airbnb.Web.Controllers
                                 await userManager.CreateAsync(user);
                                 var token = await userManager.GenerateEmailConfirmationTokenAsync(user);
                                 var emailConfiguration = configuration.GetSection(nameof(EmailConfiguration)).Get<EmailConfiguration>();
-                                var emailSender = new EmailSender(emailConfiguration);
+                                var emailSender = new EmailSender(emailConfiguration, environment);
                                 var message = emailSender.GenerateEmailMessage(user.Email, user.FirstName, token, EmailType.EmailVerification);
                                 var ismailSent = await emailSender.SendEmailAsync(message);
                                 await userManager.AddToRoleAsync(user, Role.User.ToString());
@@ -338,7 +340,7 @@ namespace Airbnb.Web.Controllers
                 }
                 var token = await userManager.GeneratePasswordResetTokenAsync(user);
                 var emailConfiguration = configuration.GetSection(nameof(EmailConfiguration)).Get<EmailConfiguration>();
-                var emailSender = new EmailSender(emailConfiguration);
+                var emailSender = new EmailSender(emailConfiguration, environment);
                 var message = emailSender.GenerateEmailMessage(user.Email, user.FirstName, token, EmailType.PasswordReset);
                 var ismailSent = await emailSender.SendEmailAsync(message);
 
@@ -346,7 +348,7 @@ namespace Airbnb.Web.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest();
+                return BadRequest(ex.Message);
             }
         }
 
