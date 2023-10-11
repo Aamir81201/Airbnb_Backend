@@ -115,7 +115,6 @@ namespace Airbnb.Web.Controllers
             }
         }
 
-
         [HttpPost("PreUserSignUp")]
         public async Task<IActionResult> PreUserSignUp(UserSignUpModel userSignUp)
         {

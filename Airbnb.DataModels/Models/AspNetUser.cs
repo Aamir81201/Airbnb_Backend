@@ -45,6 +45,10 @@ public partial class AspNetUser
 
     public int AccessFailedCount { get; set; }
 
+    public virtual ICollection<Airbnb> Airbnbs { get; set; } = new List<Airbnb>();
+
+    public virtual ICollection<Airbnbtemp> Airbnbtemps { get; set; } = new List<Airbnbtemp>();
+
     public virtual ICollection<AspNetUserClaim> AspNetUserClaims { get; set; } = new List<AspNetUserClaim>();
 
     public virtual ICollection<AspNetUserLogin> AspNetUserLogins { get; set; } = new List<AspNetUserLogin>();

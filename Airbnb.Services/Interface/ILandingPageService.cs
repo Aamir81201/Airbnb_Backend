@@ -4,10 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Airbnb.Repository.Interface
+namespace Airbnb.Services.Interface
 {
-    public interface IUnitOfWork
+    public interface ILandingPageService
     {
-        IAirbnbRepository AirbnbRepository { get; }
+        List<string> GetAirbnbNames();
     }
 }

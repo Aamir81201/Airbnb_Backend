@@ -10,12 +10,12 @@ namespace Airbnb.Repository.Repository
 {
     public class UnitOfWork: IUnitOfWork
     {
-        private readonly AuthDbContext _context;
-        public UnitOfWork(AuthDbContext context)
+        private readonly ApplicationDbContext _context;
+        public UnitOfWork(ApplicationDbContext context)
         {
             _context = context;
         }
 
-        public IAuthRepository AuthRepository => new AuthRepository(_context);
+        public IAirbnbRepository AirbnbRepository => new AirbnbRepository(_context);
     }
 }

@@ -12,11 +12,11 @@ namespace Airbnb.Repository.Repository
 {
     public class AuthRepository : IAuthRepository
     {
-        private readonly AuthDbContext _context;
-        public AuthRepository(AuthDbContext context)
-        {
-            _context = context;
-        }
+        //private readonly AuthDbContext _context;
+        //public AuthRepository(AuthDbContext context)
+        //{
+        //    _context = context;
+        //}
 
         //public bool IsEmailExists(string email)
         //{
