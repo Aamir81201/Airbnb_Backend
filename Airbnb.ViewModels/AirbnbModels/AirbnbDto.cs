@@ -8,7 +8,10 @@ namespace Airbnb.ViewModels.AirbnbModels
 {
     public class AirbnbDto
     {
+        public double CurrentPage { get; set; }
+        public float CardsPerPage { get; set; }
         public Location CurrentLocation { get; set; } = new Location();
-        public Bounds? Bounds { get; set; } 
+        public Bounds? Bounds { get; set; }
+        public string? CategoryId { get; set; }
     }
 }

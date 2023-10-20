@@ -29,13 +29,12 @@ namespace Airbnb.Web.Controllers
             }
         }
 
-        [HttpGet("GetAirbnbCards")]
-        public IActionResult GetAirbnbCards(string airbnbDto)
+        [HttpPost("GetAirbnbCards")]
+        public IActionResult GetAirbnbCards(AirbnbDto airbnbDto)
         {
             try
             {
-                AirbnbDto airbnbDtoObject = JsonConvert.DeserializeObject<AirbnbDto>(airbnbDto);
-                return Ok(_unitOfWork.AirbnbRepository.GetAirbnbCards(airbnbDtoObject));
+                return Ok(_unitOfWork.AirbnbRepository.GetAirbnbCards(airbnbDto));
             }
             catch (Exception ex)
             {

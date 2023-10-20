@@ -39,20 +39,44 @@ namespace Airbnb.Repository.Repository
         {
             CultureInfo culture = new CultureInfo("en-IN"); // Example: Using US culture
 
-            var cards = _context.Airbnbs.Where(airbnb => airbnbDto.Bounds == null || (airbnb.Latitude <= airbnbDto.Bounds.North && airbnb.Latitude >= airbnbDto.Bounds.South && airbnb.Longitude <= airbnbDto.Bounds.East && airbnb.Longitude >= airbnbDto.Bounds.West)).Select(airbnb => new AirbnbCardModel()
+            var airbnbQuery = _context.Airbnbs.AsQueryable();
+
+            if (airbnbDto.Bounds != null)
+            {
+                airbnbQuery = airbnbQuery.Where(airbnb => airbnb.Latitude <= airbnbDto.Bounds.North
+                && airbnb.Latitude >= airbnbDto.Bounds.South
+                && (airbnbDto.Bounds.East > airbnbDto.Bounds.West ?
+                (airbnb.Longitude <= airbnbDto.Bounds.East && airbnb.Longitude >= airbnbDto.Bounds.West) :
+                (airbnb.Longitude <= airbnbDto.Bounds.East && airbnb.Longitude >= (-180.0)) || (airbnb.Longitude <= 180.0 && airbnb.Longitude >= airbnbDto.Bounds.West))
+                ).AsQueryable();
+            }
+
+            if(airbnbDto.CategoryId != null)
+            {
+                airbnbQuery = airbnbQuery.Where(airbnb => airbnb.CategoryId.ToString() == airbnbDto.CategoryId);
+            }
+
+            var airbnbCards = airbnbQuery.Select(airbnb => new AirbnbCardModel()
             {
                 AirbnbId = airbnb.AirbnbId,
                 City = airbnb.City,
                 Country = airbnb.Country,
                 AirbnbImages = airbnb.AirbnbMedia.Select(media => media.ImageUrl).ToList(),
-                Distance = Math.Round(GetDistance(airbnb.Longitude ?? 0, airbnb.Latitude ?? 0, airbnbDto.CurrentLocation.Lat, airbnbDto.CurrentLocation.Lng) / 1000),
+                Distance = Math.Round(GetDistance(airbnb.Longitude ?? 0, airbnb.Latitude ?? 0, airbnbDto.CurrentLocation.Lng, airbnbDto.CurrentLocation.Lat) / 1000),
                 Latitude = airbnb.Latitude,
                 Longitude = airbnb.Longitude,
                 CategoryName = airbnb.Category.Name,
                 Price = string.Format(culture, "{0:C}", Math.Round(airbnb.Price).ToString("C", culture)).Replace(".00", "")
-            }).ToList();
+            }).AsQueryable();
 
-            return cards;
+            if (airbnbDto.CurrentPage > 0 && airbnbDto.CardsPerPage > 0)
+            {
+                int CurrentPage = (int)Math.Round(airbnbDto.CurrentPage);
+                int CardsPerPage = (int)Math.Round(airbnbDto.CardsPerPage);
+                return airbnbCards.Skip((CurrentPage - 1) * CardsPerPage).Take(CardsPerPage).ToList();
+            }
+
+            return airbnbCards.ToList();
         }
 
         public static double GetDistance(double longitude, double latitude, double otherLongitude, double otherLatitude)
