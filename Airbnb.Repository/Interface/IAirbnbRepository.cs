@@ -12,6 +12,6 @@ namespace Airbnb.Repository.Interface
     {
         List<string> GetNames();
         List<CategoryModel> GetCategories();
-        List<AirbnbCardModel> GetAirbnbCards(AirbnbDto airbnbDto);
+        AirbnbListModel GetAirbnbCards(AirbnbDto airbnbDto);
     }
 }

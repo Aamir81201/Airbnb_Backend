@@ -13,5 +13,6 @@ namespace Airbnb.ViewModels.AirbnbModels
         public Location CurrentLocation { get; set; } = new Location();
         public Bounds? Bounds { get; set; }
         public string? CategoryId { get; set; }
+        public SearchParams? SearchParams { get; set; }
     }
 }

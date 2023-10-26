@@ -266,11 +266,11 @@ namespace Airbnb.Web.Controllers
                         }
                     }
                 }
-                return BadRequest("I dont know");
+                return BadRequest("I don't know");
             }
             catch (Exception ex)
             {
-                return BadRequest("Something teribble");
+                return BadRequest("Something terrible");
             }
         }
 
