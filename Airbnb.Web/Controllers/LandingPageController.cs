@@ -37,7 +37,7 @@ namespace Airbnb.Web.Controllers
                 return Ok(_unitOfWork.AirbnbRepository.GetAirbnbCards(airbnbDto));
             }
             catch (Exception ex)
-            {
+            {   
                 return BadRequest();
             }
         }

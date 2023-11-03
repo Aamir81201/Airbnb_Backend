@@ -79,7 +79,7 @@ namespace Airbnb.Repository.Repository
 
             if (airbnbDto.CategoryId != null)
             {
-                airbnbQuery = airbnbQuery.Where(airbnb => airbnb.CategoryId.ToString() == airbnbDto.CategoryId);
+                //airbnbQuery = airbnbQuery.Where(airbnb => airbnb.CategoryId.ToString() == airbnbDto.CategoryId);
             }
 
 

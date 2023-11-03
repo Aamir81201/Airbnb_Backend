@@ -99,7 +99,7 @@ namespace Airbnb.Web.Controllers
                 var user = await userManager.FindByEmailAsync(userLogin.Email);
                 if (user != null)
                 {
-                    var signIn = await signManager.PasswordSignInAsync(user, userLogin.Password, false, true);
+                    var signIn = await signManager.PasswordSignInAsync(user, userLogin.Password, false, false);
 
                     if (signIn.Succeeded)
                     {
