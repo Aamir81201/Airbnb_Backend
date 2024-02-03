@@ -1,7 +1,6 @@
 ﻿using Airbnb.Repository.Interface;
 using Airbnb.ViewModels.AirbnbModels;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
 
 namespace Airbnb.Web.Controllers
 {
@@ -37,7 +36,21 @@ namespace Airbnb.Web.Controllers
                 return Ok(_unitOfWork.AirbnbRepository.GetAirbnbCards(airbnbDto));
             }
             catch (Exception ex)
-            {   
+            {
+                return BadRequest();
+            }
+        }
+
+        [HttpGet("GetRoom")]
+        public IActionResult GetAirbnbRoom(string airbnbId)
+        {
+            try
+            {
+                var a = _unitOfWork.AirbnbRepository.GetAirbnbDetails(airbnbId);
+                return Ok(a);
+            }
+            catch (Exception ex)
+            {
                 return BadRequest();
             }
         }
