@@ -1,5 +1,6 @@
-﻿using Airbnb.Repository.Interface;
-using Airbnb.ViewModels.AirbnbModels;
+﻿using Airbnb.Model.DTO.Request;
+using Airbnb.Model.DTO.Response;
+using Airbnb.Repository.Interface;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Airbnb.Web.Controllers
@@ -8,48 +9,50 @@ namespace Airbnb.Web.Controllers
     [ApiController]
     public class LandingPageController : ControllerBase
     {
-        private readonly IUnitOfWork _unitOfWork;
+        private readonly IAirbnbRepository airbnbRepository;
 
-        public LandingPageController(IUnitOfWork unitOfWork)
+        public LandingPageController(IAirbnbRepository airbnbRepository)
         {
-            _unitOfWork = unitOfWork;
+            this.airbnbRepository = airbnbRepository;
         }
 
         [HttpGet("GetCategories")]
-        public IActionResult GetCategories()
+        public async Task<IActionResult> GetCategories()
         {
             try
             {
-                return Ok(_unitOfWork.AirbnbRepository.GetCategories());
+                IEnumerable<CategoryResponseDTO> categoryResponseDTO = await airbnbRepository.GetCategories();
+                return Ok(categoryResponseDTO);
             }
-            catch (Exception ex)
+            catch
             {
                 return BadRequest();
             }
         }
 
         [HttpPost("GetAirbnbCards")]
-        public IActionResult GetAirbnbCards(AirbnbDto airbnbDto)
+        public async Task<IActionResult> GetAirbnbCards(AirbnbRequestDTO airbnbDto)
         {
             try
             {
-                return Ok(_unitOfWork.AirbnbRepository.GetAirbnbCards(airbnbDto));
+                AirbnbResponseDTO airbnbResponseDTO = await airbnbRepository.GetAirbnbCards(airbnbDto);
+                return Ok(airbnbResponseDTO);
             }
-            catch (Exception ex)
+            catch
             {
                 return BadRequest();
             }
         }
 
         [HttpGet("GetRoom")]
-        public IActionResult GetAirbnbRoom(string airbnbId)
+        public async Task<IActionResult> GetAirbnbRoom(Guid airbnbId)
         {
             try
             {
-                var a = _unitOfWork.AirbnbRepository.GetAirbnbDetails(airbnbId);
-                return Ok(a);
+                AirbnbDetailResponseDTO airbnbDetailsDTO = await airbnbRepository.GetAirbnbDetails(airbnbId);
+                return Ok(airbnbDetailsDTO);
             }
-            catch (Exception ex)
+            catch
             {
                 return BadRequest();
             }

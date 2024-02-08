@@ -1,5 +1,6 @@
-﻿using Airbnb.DataModels.Models;
-using Airbnb.ViewModels;
+﻿using Airbnb.Model.CustomModels;
+using Airbnb.Model.DTO.Request;
+using Airbnb.Model.Models;
 using Google.Apis.Auth;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
@@ -34,13 +35,13 @@ namespace Airbnb.Web.Auth
 
             var authClaims = new List<Claim>()
             {
-                new Claim("Roles",  userAuth.Role.ToString()),
-                new Claim("userId",  userAuth.UserId.ToString()),
-                new Claim("name", userAuth.FirstName),
-                new Claim("email", userAuth.Email),
+                new("Roles",  userAuth.Role.First().ToString()),
+                new("userId",  userAuth.UserId.ToString()),
+                new("name", userAuth.FirstName),
+                new("email", userAuth.Email),
             };
 
-            var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JwtSettings:Secret"]));
+            var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JwtSettings:Secret"]!));
 
             var token = new JwtSecurityToken(
                 issuer: configuration["JwtSettings:ValidIssuer"],
@@ -55,26 +56,19 @@ namespace Airbnb.Web.Auth
             return jwtToken;
         }
 
-        public async Task<GoogleJsonWebSignature.Payload> VerifyGoogleToken(UserExternalAuthModel userExternalAuth)
+        public async Task<GoogleJsonWebSignature.Payload> VerifyGoogleToken(UserExternalAuthRequestDTO userExternalAuth)
         {
-            try
-            {
-                GoogleJsonWebSignature.ValidationSettings settings = new GoogleJsonWebSignature.ValidationSettings();
+            GoogleJsonWebSignature.ValidationSettings settings = new GoogleJsonWebSignature.ValidationSettings();
 
-                // Change this to your google client ID
-                settings.Audience = new List<string>() { configuration.GetValue<string>("Authentication:Google:ClientId") };
+            // Change this to your google client ID
+            settings.Audience = new List<string>() { configuration.GetValue<string>("Authentication:Google:ClientId") };
 
-                // Syncronize my local time with google server...(as the time difference is 1sec so it throws error.)
-                await Task.Delay(1000);
+            // Syncronize my local time with google server...(as the time difference is 1sec so it throws error.)
+            await Task.Delay(1000);
 
-                GoogleJsonWebSignature.Payload? payload = GoogleJsonWebSignature.ValidateAsync(userExternalAuth.TokenId, settings).Result;
+            GoogleJsonWebSignature.Payload? payload = GoogleJsonWebSignature.ValidateAsync(userExternalAuth.TokenId, settings).Result;
 
-                return payload;
-            } catch (Exception ex)
-            {
-                throw;
-            }
-            
+            return payload;
         }
     }
 }

@@ -1,7 +1,7 @@
-using Airbnb.DataModels.Data;
-using Airbnb.DataModels.Models;
+using Airbnb.Model.Data;
+using Airbnb.Model.Models;
+using Airbnb.Repository.Implementation;
 using Airbnb.Repository.Interface;
-using Airbnb.Repository.Repository;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -16,7 +16,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlSer
 builder.Services.AddIdentity<ApplicationUser, IdentityRole<Guid>>()
                 .AddEntityFrameworkStores<AuthDbContext>()
                 .AddDefaultTokenProviders();
-builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<IAirbnbRepository, AirbnbRepository>();
 builder.Services.AddControllers();
 
 builder.Services

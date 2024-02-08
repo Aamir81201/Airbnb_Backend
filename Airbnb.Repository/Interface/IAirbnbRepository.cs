@@ -1,18 +1,13 @@
-﻿using Airbnb.ViewModels.AirbnbModels;
-using Airbnb.ViewModels.CategoryModels;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Airbnb.Model.DTO.Request;
+using Airbnb.Model.DTO.Response;
 
 namespace Airbnb.Repository.Interface
 {
     public interface IAirbnbRepository
     {
-        List<string> GetNames();
-        List<CategoryModel> GetCategories();
-        AirbnbListModel GetAirbnbCards(AirbnbDto airbnbDto);
-        AirbnbDetailsModel GetAirbnbDetails(string airbnbId);
+        Task<IEnumerable<string>> GetNames();
+        Task<IEnumerable<CategoryResponseDTO>> GetCategories();
+        Task<AirbnbResponseDTO> GetAirbnbCards(AirbnbRequestDTO airbnbDto);
+        Task<AirbnbDetailResponseDTO> GetAirbnbDetails(Guid airbnbId);
     }
 }

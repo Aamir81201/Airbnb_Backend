@@ -1,20 +1,13 @@
-﻿using Airbnb.Common.Enum;
+﻿using Airbnb.Model.Common.Enum;
 using MailKit.Net.Smtp;
-using Microsoft.Extensions.Options;
 using MimeKit;
-using SendGrid;
-using SendGrid.Helpers.Mail;
 using System.Web;
-using Microsoft.AspNetCore.Hosting;
 
 namespace Airbnb.Web.Services
 {
     public class EmailSender
     {
-        private readonly ILogger _logger;
-
         private readonly EmailConfiguration _emailConfig;
-
         private IWebHostEnvironment _environment;
 
         public EmailSender(EmailConfiguration emailConfig, IWebHostEnvironment environment)
@@ -22,24 +15,20 @@ namespace Airbnb.Web.Services
             _emailConfig = emailConfig;
             _environment = environment;
         }
-        public EmailMessage GenerateEmailMessage(string email, string name, string token, EmailType emailType)
+        public EmailMessage GenerateEmailMessage(string email, string name, string token, EmailTypeEnum emailType)
         {
-            try
-            {
-
             var link = new UriBuilder("http://localhost:4200");
-
             var subject = "Email from Airbnb";
             var template = "";
 
             switch (emailType)
             {
-                case EmailType.EmailVerification:
+                case EmailTypeEnum.EmailVerification:
                     link = new UriBuilder("http://localhost:4200/email-verification");
                     subject = "Please confirm your email address";
                     template = "EmailReminderTemplate.html";
                     break;
-                case EmailType.PasswordReset:
+                case EmailTypeEnum.PasswordReset:
                     link = new UriBuilder("http://localhost:4200/reset-password");
                     subject = "Reset your password";
                     template = "EmailResetPasswordTemplate.html";
@@ -67,12 +56,6 @@ namespace Airbnb.Web.Services
             string content = string.Format(builder.HtmlBody, name, link);
 
             return new EmailMessage(new string[] { email }, subject, content);
-
-            }
-            catch
-            {
-                throw;
-            }
         }
 
         /// <summary>
@@ -82,18 +65,11 @@ namespace Airbnb.Web.Services
         /// <returns>true if email sent successfully</returns>
         public async Task<bool> SendEmailAsync(EmailMessage message)
         {
-            try
-            {
-                var emailMessage = CreateEmailMessage(message);
+            var emailMessage = CreateEmailMessage(message);
 
-                Send(emailMessage);
+            await SendAsync(emailMessage);
 
-                return true;
-            }
-            catch
-            {
-                throw;
-            }
+            return true;
         }
 
         /// <summary>
@@ -116,25 +92,14 @@ namespace Airbnb.Web.Services
         /// Send email using smtpClient class.
         /// </summary>
         /// <param name="mailMessage">MimeMessage object returned from CreateEmailMessage method</param>
-        private void Send(MimeMessage mailMessage)
-            {
+        private async Task SendAsync(MimeMessage mailMessage)
+        {
             using var client = new SmtpClient();
-            try
-            {
-                client.Connect(_emailConfig.SmtpServer, _emailConfig.Port, true);
-                client.Authenticate(_emailConfig.UserName, _emailConfig.Password);
-                client.Send(mailMessage);
-            }
-            catch
-            {
-                //log an error message or throw an exception or both.
-                throw;
-            }
-            finally
-            {
-                client.Disconnect(true);
-                client.Dispose();
-            }
+            await client.ConnectAsync(_emailConfig.SmtpServer, _emailConfig.Port, true);
+            await client.AuthenticateAsync(_emailConfig.UserName, _emailConfig.Password);
+            await client.SendAsync(mailMessage);
+            await client.DisconnectAsync(true);
+            client.Dispose();
         }
 
         //public EmailSender(IOptions<AuthMessageSenderOptions> optionsAccessor,
