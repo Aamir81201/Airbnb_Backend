@@ -1,9 +1,9 @@
 ﻿using Airbnb.Model.DTO.Request;
 using Airbnb.Model.DTO.Response;
 
-namespace Airbnb.Repository.Interface
+namespace Airbnb.Service.Interface
 {
-    public interface IAirbnbRepository : IGenericRepository<Model.Models.Airbnb>
+    public interface IAirbnbSerivce : IBaseService<Model.Models.Airbnb>
     {
         Task<IEnumerable<string>> GetNames();
 

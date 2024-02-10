@@ -9,18 +9,16 @@ using System.Globalization;
 
 namespace Airbnb.Repository.Implementation
 {
-    public class AirbnbRepository : IAirbnbRepository
+    public class AirbnbRepository : GenericRepository<Model.Models.Airbnb>, IAirbnbRepository
     {
-        private readonly ApplicationDbContext _context;
+        #region Constructor
+        public AirbnbRepository(ApplicationDbContext dbContext) : base(dbContext) { }
+        #endregion
 
-        public AirbnbRepository(ApplicationDbContext context)
-        {
-            _context = context;
-        }
-
+        #region Methods
         public async Task<IEnumerable<CategoryResponseDTO>> GetCategories()
         {
-            return await _context.AirbnbCategories.Select(c => new CategoryResponseDTO()
+            return await _dbContext.AirbnbCategories.Select(c => new CategoryResponseDTO()
             {
                 Id = c.AirbnbCategoryId,
                 Name = c.Name,
@@ -30,14 +28,14 @@ namespace Airbnb.Repository.Implementation
 
         public async Task<IEnumerable<string>> GetNames()
         {
-            return await _context.Airbnbs.Select(a => a.Name).ToListAsync();
+            return await _dbContext.Airbnbs.Select(a => a.Name).ToListAsync();
         }
 
         public async Task<AirbnbResponseDTO> GetAirbnbCards(AirbnbRequestDTO airbnbRequestDTO)
         {
             CultureInfo culture = new CultureInfo("en-IN"); // Example: Using US culture
 
-            var airbnbQuery = _context.Airbnbs.AsQueryable();
+            var airbnbQuery = _dbContext.Airbnbs.AsQueryable();
             int? dayRange = null;
             bool longTitle = false;
             bool showBeds = false;
@@ -114,7 +112,7 @@ namespace Airbnb.Repository.Implementation
         public async Task<AirbnbDetailResponseDTO> GetAirbnbDetails(Guid airbnbId)
         {
             CultureInfo culture = new CultureInfo("en-IN"); // Example: Using US culture
-            var airbnbQuery = _context.Airbnbs.Where(airbnb => airbnb.AirbnbId == airbnbId);
+            var airbnbQuery = _dbContext.Airbnbs.Where(airbnb => airbnb.AirbnbId == airbnbId);
             AirbnbDetailResponseDTO airbnbDetailResponseDTO = await airbnbQuery.Select(airbnb => new AirbnbDetailResponseDTO()
             {
                 AirbnbId = airbnb.AirbnbId,
@@ -144,5 +142,6 @@ namespace Airbnb.Repository.Implementation
             }).FirstOrDefaultAsync() ?? new AirbnbDetailResponseDTO();
             return airbnbDetailResponseDTO;
         }
+        #endregion
     }
 }

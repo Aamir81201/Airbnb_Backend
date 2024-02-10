@@ -1,6 +1,8 @@
 ﻿using Airbnb.Model.DTO.Request;
 using Airbnb.Model.DTO.Response;
-using Airbnb.Repository.Interface;
+using Airbnb.Model.Models;
+using Airbnb.Service.Interface;
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Airbnb.Web.Controllers
@@ -9,11 +11,15 @@ namespace Airbnb.Web.Controllers
     [ApiController]
     public class LandingPageController : ControllerBase
     {
-        private readonly IAirbnbRepository airbnbRepository;
+        private readonly IAirbnbSerivce _airbnbService;
+        private readonly IAirbnbCategoryService _airbnbCategoryService;
+        private readonly IMapper _mapper;
 
-        public LandingPageController(IAirbnbRepository airbnbRepository)
+        public LandingPageController(IAirbnbSerivce airbnbService, IAirbnbCategoryService airbnbCategoryService, IMapper mapper)
         {
-            this.airbnbRepository = airbnbRepository;
+            _airbnbService = airbnbService;
+            _airbnbCategoryService = airbnbCategoryService;
+            _mapper = mapper;
         }
 
         [HttpGet("GetCategories")]
@@ -21,7 +27,8 @@ namespace Airbnb.Web.Controllers
         {
             try
             {
-                IEnumerable<CategoryResponseDTO> categoryResponseDTO = await airbnbRepository.GetCategories();
+                IEnumerable<AirbnbCategory> airbnbCategories = await _airbnbCategoryService.GetAllAsync();
+                IEnumerable<CategoryResponseDTO> categoryResponseDTO = _mapper.Map<IEnumerable<CategoryResponseDTO>>(airbnbCategories);
                 return Ok(categoryResponseDTO);
             }
             catch
@@ -35,7 +42,7 @@ namespace Airbnb.Web.Controllers
         {
             try
             {
-                AirbnbResponseDTO airbnbResponseDTO = await airbnbRepository.GetAirbnbCards(airbnbDto);
+                AirbnbResponseDTO airbnbResponseDTO = await _airbnbService.GetAirbnbCards(airbnbDto);
                 return Ok(airbnbResponseDTO);
             }
             catch
@@ -49,7 +56,7 @@ namespace Airbnb.Web.Controllers
         {
             try
             {
-                AirbnbDetailResponseDTO airbnbDetailsDTO = await airbnbRepository.GetAirbnbDetails(airbnbId);
+                AirbnbDetailResponseDTO airbnbDetailsDTO = await _airbnbService.GetAirbnbDetails(airbnbId);
                 return Ok(airbnbDetailsDTO);
             }
             catch
