@@ -6,4 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Airbnb.Repository\Airbnb.Repository.csproj" />
+  </ItemGroup>
+
 </Project>
