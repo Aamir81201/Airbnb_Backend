@@ -40,24 +40,34 @@ namespace Airbnb.Web.Controllers
         {
             try
             {
-                var user = await userManager.FindByEmailAsync(email);
+                ApplicationUser? user = await userManager.FindByEmailAsync(email);
+                return Ok(user != null);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex);
+            }
+        }
+
+        [HttpGet("UserProfile")]
+        public async Task<IActionResult> GetUserProfile(string email)
+        {
+            try
+            {
+                ApplicationUser? user = await userManager.FindByEmailAsync(email);
                 if (user == null)
                 {
-                    return Ok(new UserStateResponseDTO() { State = PreSignupEnum.signup.ToString() });
+                    return BadRequest();
                 }
                 else
                 {
-                    return Ok(new UserStateResponseDTO()
+                    return Ok(new UserProfileResponseDTO()
                     {
-                        State = PreSignupEnum.password.ToString(),
-                        UserProfile = new UserProfileResponseDTO()
-                        {
-                            UserId = user.Id,
-                            Email = user.Email,
-                            Name = user.FirstName,
-                            Provider = userManager.GetLoginsAsync(user).Result.FirstOrDefault()?.LoginProvider,
-                            Avatar = user.Avatar
-                        }
+                        UserId = user.Id,
+                        Email = user.Email,
+                        Name = user.FirstName,
+                        Provider = userManager.GetLoginsAsync(user).Result.FirstOrDefault()?.LoginProvider,
+                        Avatar = user.Avatar
                     });
                 }
             }
@@ -67,8 +77,8 @@ namespace Airbnb.Web.Controllers
             }
         }
 
-        [HttpPost("GetSavedUsers")]
-        public async Task<IActionResult> GetSavedUsers(IEnumerable<Guid> userIds)
+        [HttpPost("UserProfiles")]
+        public async Task<IActionResult> GetUserProfiles(IEnumerable<Guid> userIds)
         {
             try
             {
@@ -94,10 +104,10 @@ namespace Airbnb.Web.Controllers
         {
             try
             {
-                ApplicationUser user = await userManager.FindByEmailAsync(userLoginRequestDTO.Email);
+                ApplicationUser? user = await userManager.FindByEmailAsync(userLoginRequestDTO.Email);
                 if (user != null)
                 {
-                    var signIn = await signManager.PasswordSignInAsync(user, userLoginRequestDTO.Password, false, false);
+                    Microsoft.AspNetCore.Identity.SignInResult signIn = await signManager.PasswordSignInAsync(user, userLoginRequestDTO.Password, false, false);
 
                     if (signIn.Succeeded)
                     {
@@ -113,47 +123,47 @@ namespace Airbnb.Web.Controllers
             }
         }
 
-        [HttpPost("PreUserSignUp")]
-        public async Task<IActionResult> PreUserSignUp(UserSignUpRequestDTO userSignUpRequestDTO)
-        {
-            try
-            {
-                ApplicationUser? user = await userManager.FindByEmailAsync(userSignUpRequestDTO.Email);
-                var userStateResponseDTO = new UserStateResponseDTO();
-                if (user != null)
-                {
-                    var signIn = await signManager.PasswordSignInAsync(user, userSignUpRequestDTO.Password, false, false);
-                    if (signIn != null && signIn.Succeeded)
-                    {
-                        string jwtToken = await authService.GenerateToken(user);
+        //[HttpPost("PreUserSignUp")]
+        //public async Task<IActionResult> PreUserSignUp(UserSignUpRequestDTO userSignUpRequestDTO)
+        //{
+        //    try
+        //    {
+        //        ApplicationUser? user = await userManager.FindByEmailAsync(userSignUpRequestDTO.Email);
+        //        var userStateResponseDTO = new UserStateResponseDTO();
+        //        if (user != null)
+        //        {
+        //            var signIn = await signManager.PasswordSignInAsync(user, userSignUpRequestDTO.Password, false, false);
+        //            if (signIn != null && signIn.Succeeded)
+        //            {
+        //                string jwtToken = await authService.GenerateToken(user);
 
-                        userStateResponseDTO.State = PreSignupEnum.login.ToString();
-                        userStateResponseDTO.Token = jwtToken;
-                    }
-                    else
-                    {
-                        userStateResponseDTO.State = PreSignupEnum.password.ToString();
-                        userStateResponseDTO.UserProfile = new UserProfileResponseDTO()
-                        {
-                            UserId = user.Id,
-                            Email = user.Email,
-                            Name = user.FirstName,
-                            Provider = userManager.GetLoginsAsync(user).Result.FirstOrDefault()?.LoginProvider,
-                            Avatar = user.Avatar
-                        };
-                    }
-                }
-                else
-                {
-                    userStateResponseDTO.State = PreSignupEnum.signup.ToString();
-                }
-                return Ok(userStateResponseDTO);
-            }
-            catch
-            {
-                return BadRequest();
-            }
-        }
+        //                userStateResponseDTO.State = PreSignupEnum.login.ToString();
+        //                userStateResponseDTO.Token = jwtToken;
+        //            }
+        //            else
+        //            {
+        //                userStateResponseDTO.State = PreSignupEnum.password.ToString();
+        //                userStateResponseDTO.UserProfile = new UserProfileResponseDTO()
+        //                {
+        //                    UserId = user.Id,
+        //                    Email = user.Email,
+        //                    Name = user.FirstName,
+        //                    Provider = userManager.GetLoginsAsync(user).Result.FirstOrDefault()?.LoginProvider,
+        //                    Avatar = user.Avatar
+        //                };
+        //            }
+        //        }
+        //        else
+        //        {
+        //            userStateResponseDTO.State = PreSignupEnum.signup.ToString();
+        //        }
+        //        return Ok(userStateResponseDTO);
+        //    }
+        //    catch
+        //    {
+        //        return BadRequest();
+        //    }
+        //}
 
         [HttpPost("UserSignUp")]
         public async Task<IActionResult> UserSignUp(UserSignUpRequestDTO userSignUpRequestDTO)
@@ -273,8 +283,8 @@ namespace Airbnb.Web.Controllers
 
                     if (payload != null)
                     {
-                        var info = new UserLoginInfo(userSignUp.ExternalUserAuth.Provider, payload.Subject, userSignUp.ExternalUserAuth.Provider);
-                        var user = await userManager.FindByLoginAsync(info.LoginProvider, info.ProviderKey);
+                        UserLoginInfo info = new UserLoginInfo(userSignUp.ExternalUserAuth.Provider, payload.Subject, userSignUp.ExternalUserAuth.Provider);
+                        ApplicationUser? user = await userManager.FindByLoginAsync(info.LoginProvider, info.ProviderKey);
                         if (user == null)
                         {
                             user = await userManager.FindByEmailAsync(payload.Email);
@@ -292,15 +302,15 @@ namespace Airbnb.Web.Controllers
                                 };
 
                                 await userManager.CreateAsync(user);
-                                var token = await userManager.GenerateEmailConfirmationTokenAsync(user);
-                                var emailConfiguration = configuration.GetSection(nameof(EmailConfiguration)).Get<EmailConfiguration>();
-                                var emailSender = new EmailSender(emailConfiguration, environment);
-                                var message = emailSender.GenerateEmailMessage(user.Email, user.FirstName, token, EmailTypeEnum.EmailVerification);
-                                var ismailSent = await emailSender.SendEmailAsync(message);
+                                string token = await userManager.GenerateEmailConfirmationTokenAsync(user);
+                                EmailConfiguration emailConfiguration = configuration.GetSection(nameof(EmailConfiguration)).Get<EmailConfiguration>();
+                                EmailSender emailSender = new EmailSender(emailConfiguration, environment);
+                                EmailMessage message = emailSender.GenerateEmailMessage(user.Email, user.FirstName, token, EmailTypeEnum.EmailVerification);
+                                bool isMailSent = await emailSender.SendEmailAsync(message);
                                 await userManager.AddToRoleAsync(user, RoleEmum.User.ToString());
                                 await userManager.AddLoginAsync(user, info);
 
-                                var jwtToken = await authService.GenerateToken(user);
+                                string jwtToken = await authService.GenerateToken(user);
 
                                 return Ok(jwtToken);
                             }
@@ -320,18 +330,17 @@ namespace Airbnb.Web.Controllers
         {
             try
             {
-                var user = await userManager.FindByEmailAsync(email);
+                ApplicationUser? user = await userManager.FindByEmailAsync(email);
                 if (user == null)
                 {
                     return Ok(false);
                 }
-                var token = await userManager.GeneratePasswordResetTokenAsync(user);
-                var emailConfiguration = configuration.GetSection(nameof(EmailConfiguration)).Get<EmailConfiguration>();
-                var emailSender = new EmailSender(emailConfiguration, environment);
-                var message = emailSender.GenerateEmailMessage(user.Email, user.FirstName, token, EmailTypeEnum.PasswordReset);
-                var ismailSent = await emailSender.SendEmailAsync(message);
-
-                return Ok(true);
+                string token = await userManager.GeneratePasswordResetTokenAsync(user);
+                EmailConfiguration emailConfiguration = configuration.GetSection(nameof(EmailConfiguration)).Get<EmailConfiguration>();
+                EmailSender emailSender = new EmailSender(emailConfiguration, environment);
+                EmailMessage message = emailSender.GenerateEmailMessage(user.Email, user.FirstName, token, EmailTypeEnum.PasswordReset);
+                bool isMailSent = await emailSender.SendEmailAsync(message);
+                return Ok(isMailSent);
             }
             catch (Exception ex)
             {
@@ -355,15 +364,15 @@ namespace Airbnb.Web.Controllers
         }
 
         [HttpGet("VerifyResetPassword")]
-        public async Task<IActionResult> VerifyResetPassword(string email, string token)
+        public async Task<IActionResult> VerifyResetPassword(VerifyResetPasswordRequestDTO verifyResetPasswordRequestDTO)
         {
-            var user = await userManager.FindByEmailAsync(email);
+            ApplicationUser? user = await userManager.FindByEmailAsync(verifyResetPasswordRequestDTO.Email);
             if (user != null)
             {
-                var isTokenValid = await userManager.VerifyUserTokenAsync(user, userManager.Options.Tokens.PasswordResetTokenProvider, "ResetPassword", token);
+                bool isTokenValid = await userManager.VerifyUserTokenAsync(user, userManager.Options.Tokens.PasswordResetTokenProvider, "ResetPassword", verifyResetPasswordRequestDTO.Token);
                 if (isTokenValid)
                 {
-                    var userAuth = new UserAuthModel()
+                    var userAuth = new VerifyResetPasswordResponseDTO()
                     {
                         UserId = user.Id,
                         Email = user.Email,
@@ -378,17 +387,17 @@ namespace Airbnb.Web.Controllers
         }
 
         [HttpPost("ResetPassword")]
-        public async Task<IActionResult> ResetPassword(UserResetPasswordModel resetPassword)
+        public async Task<IActionResult> ResetPassword(ResetPasswordRequestDTO resetPasswordRequestDTO)
         {
             try
             {
-                var user = await userManager.FindByEmailAsync(resetPassword.Email);
-                var PasswordResult = await signManager.CheckPasswordSignInAsync(user, resetPassword.NewPassword, true);
+                ApplicationUser? user = await userManager.FindByEmailAsync(resetPasswordRequestDTO.Email);
+                Microsoft.AspNetCore.Identity.SignInResult PasswordResult = await signManager.CheckPasswordSignInAsync(user, resetPasswordRequestDTO.NewPassword, true);
                 if (PasswordResult.Succeeded)
                 {
                     return BadRequest(new { title = "Invalid", message = "Your new password cannot be the same as the old password." });
                 }
-                var result = await userManager.ResetPasswordAsync(user, resetPassword.Token, resetPassword.NewPassword);
+                IdentityResult result = await userManager.ResetPasswordAsync(user, resetPasswordRequestDTO.Token, resetPasswordRequestDTO.NewPassword);
 
                 if (result.Succeeded)
                 {

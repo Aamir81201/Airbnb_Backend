@@ -1,5 +1,6 @@
 using Airbnb.Model.Data;
 using Airbnb.Model.Models;
+using Airbnb.Web.Helper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -17,6 +18,9 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole<Guid>>()
                 .AddEntityFrameworkStores<AuthDbContext>()
                 .AddDefaultTokenProviders();
 builder.Services.AddControllers();
+
+// Scoped Service Injector
+ServiceInjector.Inject(builder.Services);
 
 #region JWT token Authentication
 builder.Services
@@ -63,11 +67,11 @@ builder.Services.Configure<IdentityOptions>(options =>
 #region Cors policy
 builder.Services.AddCors(options =>
 {
-options.AddPolicy(name: "MyAllowSpecificOrigins",
-              policy =>
-              {
-                  policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
-              });
+    options.AddPolicy(name: "MyAllowSpecificOrigins",
+                  policy =>
+                  {
+                      policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+                  });
 });
 #endregion
 

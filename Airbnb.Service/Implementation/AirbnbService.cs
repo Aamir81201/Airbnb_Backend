@@ -22,15 +22,5 @@ namespace Airbnb.Service.Implementation
         {
             return await _airbnbRepository.GetAirbnbDetails(airbnbId);
         }
-
-        public async Task<IEnumerable<CategoryResponseDTO>> GetCategories()
-        {
-            return await _airbnbRepository.GetCategories();
-        }
-
-        public async Task<IEnumerable<string>> GetNames()
-        {
-            return await _airbnbRepository.GetNames();
-        }
     }
 }

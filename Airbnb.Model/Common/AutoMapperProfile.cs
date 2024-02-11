@@ -8,7 +8,10 @@ namespace Airbnb.Model.Common
         public AutoMapperProfile()
         {
             CreateMap<AirbnbCategory, CategoryResponseDTO>()
-                .ForMember(dest => dest.Id, cd => cd.MapFrom(map => map.AirbnbCategoryId));
+                .ForMember(dest => dest.Id, src => src.MapFrom(map => map.AirbnbCategoryId));
+
+            CreateMap<ApplicationUser, UserProfileResponseDTO>()
+                .ForMember(dest => dest.UserId, src => src.MapFrom(map => map.Id));
         }
     }
 }

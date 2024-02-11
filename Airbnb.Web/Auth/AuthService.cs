@@ -1,5 +1,4 @@
-﻿using Airbnb.Model.CustomModels;
-using Airbnb.Model.DTO.Request;
+﻿using Airbnb.Model.DTO.Request;
 using Airbnb.Model.Models;
 using Google.Apis.Auth;
 using Microsoft.AspNetCore.Identity;
@@ -23,50 +22,42 @@ namespace Airbnb.Web.Auth
 
         public async Task<string> GenerateToken(ApplicationUser user)
         {
-            var userAuth = new UserAuthModel()
+            IEnumerable<string> roles = await userManager.GetRolesAsync(user);
+            List<Claim> claims = new()
             {
-                UserId = user.Id,
-                Email = user.Email,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                Avatar = user.Avatar,
-                Role = await userManager.GetRolesAsync(user)
+                new("roles",  roles.FirstOrDefault() ?? string.Empty),
+                new("userId",  user.Id.ToString()),
+                new("name", user.FirstName),
+                new("email", user.Email)
             };
 
-            var authClaims = new List<Claim>()
-            {
-                new("Roles",  userAuth.Role.First().ToString()),
-                new("userId",  userAuth.UserId.ToString()),
-                new("name", userAuth.FirstName),
-                new("email", userAuth.Email),
-            };
+            SymmetricSecurityKey authSigningKey = new(Encoding.UTF8.GetBytes(configuration["JwtSettings:Secret"]!));
 
-            var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JwtSettings:Secret"]!));
-
-            var token = new JwtSecurityToken(
+            JwtSecurityToken token = new(
                 issuer: configuration["JwtSettings:ValidIssuer"],
                 audience: configuration["JwtSettings:ValidAudience"],
-                expires: DateTime.UtcNow.AddMinutes(5),
-                claims: authClaims,
+                expires: DateTime.UtcNow.AddMinutes(10),
+                claims: claims,
                 signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
                 );
 
-            var jwtToken = new JwtSecurityTokenHandler().WriteToken(token);
+            string jwtToken = new JwtSecurityTokenHandler().WriteToken(token);
 
             return jwtToken;
         }
 
-        public async Task<GoogleJsonWebSignature.Payload> VerifyGoogleToken(UserExternalAuthRequestDTO userExternalAuth)
+        public async Task<GoogleJsonWebSignature.Payload?> VerifyGoogleToken(UserExternalAuthRequestDTO userExternalAuth)
         {
-            GoogleJsonWebSignature.ValidationSettings settings = new GoogleJsonWebSignature.ValidationSettings();
-
-            // Change this to your google client ID
-            settings.Audience = new List<string>() { configuration.GetValue<string>("Authentication:Google:ClientId") };
+            GoogleJsonWebSignature.ValidationSettings settings = new()
+            {
+                // Change this to your google client ID
+                Audience = new List<string>() { configuration.GetValue<string>("Authentication:Google:ClientId") }
+            };
 
             // Syncronize my local time with google server...(as the time difference is 1sec so it throws error.)
             await Task.Delay(1000);
 
-            GoogleJsonWebSignature.Payload? payload = GoogleJsonWebSignature.ValidateAsync(userExternalAuth.TokenId, settings).Result;
+            GoogleJsonWebSignature.Payload? payload = await GoogleJsonWebSignature.ValidateAsync(userExternalAuth.TokenId, settings);
 
             return payload;
         }

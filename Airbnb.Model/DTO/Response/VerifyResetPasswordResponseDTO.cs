@@ -1,6 +1,6 @@
-﻿namespace Airbnb.Model.CustomModels
+﻿namespace Airbnb.Model.DTO.Response
 {
-    public class UserAuthModel
+    public class VerifyResetPasswordResponseDTO
     {
         public Guid UserId { get; set; }
         public string Email { get; set; } = string.Empty;

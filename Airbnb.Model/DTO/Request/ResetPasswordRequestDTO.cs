@@ -1,6 +1,6 @@
-﻿namespace Airbnb.Model.CustomModels
+﻿namespace Airbnb.Model.DTO.Request
 {
-    public class UserResetPasswordModel
+    public class ResetPasswordRequestDTO
     {
         public string Email { get; set; } = string.Empty;
         public string NewPassword { get; set; } = string.Empty;

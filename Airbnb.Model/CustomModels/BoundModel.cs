@@ -1,6 +1,6 @@
 ﻿namespace Airbnb.Model.CustomModels
 {
-    public class Bounds
+    public class BoundModel
     {
         public double East { get; set; }
         public double West { get; set; }

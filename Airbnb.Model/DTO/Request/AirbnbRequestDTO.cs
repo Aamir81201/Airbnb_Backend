@@ -6,8 +6,8 @@ namespace Airbnb.Model.DTO.Request
     {
         public int CurrentPage { get; set; }
         public int CardsPerPage { get; set; }
-        public Location CurrentLocation { get; set; } = new Location();
-        public Bounds? Bounds { get; set; }
+        public LocationModel CurrentLocation { get; set; } = new LocationModel();
+        public BoundModel? Bounds { get; set; }
         public Guid? CategoryId { get; set; }
         public SearchParams? SearchParams { get; set; }
     }

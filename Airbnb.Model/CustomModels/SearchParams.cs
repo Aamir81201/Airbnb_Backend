@@ -3,7 +3,7 @@
     public class SearchParams
     {
         public RegionModel? Region { get; set; }
-        public Bounds? Bounds { get; set; }
+        public BoundModel? Bounds { get; set; }
         public GuestModel? Guests { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }

@@ -16,26 +16,11 @@ namespace Airbnb.Repository.Implementation
         #endregion
 
         #region Methods
-        public async Task<IEnumerable<CategoryResponseDTO>> GetCategories()
-        {
-            return await _dbContext.AirbnbCategories.Select(c => new CategoryResponseDTO()
-            {
-                Id = c.AirbnbCategoryId,
-                Name = c.Name,
-                Icon = c.Icon
-            }).ToListAsync();
-        }
-
-        public async Task<IEnumerable<string>> GetNames()
-        {
-            return await _dbContext.Airbnbs.Select(a => a.Name).ToListAsync();
-        }
-
         public async Task<AirbnbResponseDTO> GetAirbnbCards(AirbnbRequestDTO airbnbRequestDTO)
         {
-            CultureInfo culture = new CultureInfo("en-IN"); // Example: Using US culture
+            CultureInfo culture = new("en-IN");
 
-            var airbnbQuery = _dbContext.Airbnbs.AsQueryable();
+            IQueryable<Model.Models.Airbnb> airbnbQuery = _dbContext.Airbnbs.AsQueryable();
             int? dayRange = null;
             bool longTitle = false;
             bool showBeds = false;
@@ -50,7 +35,7 @@ namespace Airbnb.Repository.Implementation
                     airbnb.Longitude <= airbnbRequestDTO.SearchParams.Bounds.East && airbnb.Longitude >= airbnbRequestDTO.SearchParams.Bounds.West :
                     airbnb.Longitude <= airbnbRequestDTO.SearchParams.Bounds.East && airbnb.Longitude >= -180.0 || airbnb.Longitude <= 180.0 && airbnb.Longitude >= airbnbRequestDTO.SearchParams.Bounds.West)).AsQueryable();
                 }
-                if (airbnbRequestDTO.SearchParams.Guests?.Adults > 0)
+                if (airbnbRequestDTO.SearchParams.Guests != null && airbnbRequestDTO.SearchParams.Guests.Adults > 0)
                 {
                     showBeds = true;
                     airbnbQuery = airbnbQuery.Where(airbnb => airbnb.Guests >= airbnbRequestDTO.SearchParams.Guests.Adults).AsQueryable();
@@ -77,7 +62,7 @@ namespace Airbnb.Repository.Implementation
                 //airbnbQuery = airbnbQuery.Where(airbnb => airbnb.CategoryId.ToString() == airbnbDto.CategoryId);
             }
 
-            var airbnbCards = airbnbQuery.Select(airbnb => new AirbnbCardModel()
+            IQueryable<AirbnbCardModel> airbnbCards = airbnbQuery.Select(airbnb => new AirbnbCardModel()
             {
                 AirbnbId = airbnb.AirbnbId,
                 Title = (longTitle ? airbnb.Category.Name + " in " : string.Empty) + airbnb.City + ", " + airbnb.Country,
@@ -92,11 +77,6 @@ namespace Airbnb.Repository.Implementation
                 Beds = showBeds ? airbnb.Beds : null
             }).AsQueryable();
 
-            AirbnbResponseDTO airbnbResponseDTO = new AirbnbResponseDTO()
-            {
-                Count = await airbnbCards.CountAsync()
-            };
-
             if (airbnbRequestDTO.CurrentPage > 0 && airbnbRequestDTO.CardsPerPage > 0)
             {
                 int CurrentPage = airbnbRequestDTO.CurrentPage;
@@ -104,15 +84,18 @@ namespace Airbnb.Repository.Implementation
                 airbnbCards = airbnbCards.Skip((CurrentPage - 1) * CardsPerPage).Take(CardsPerPage).AsQueryable();
             }
 
-            airbnbResponseDTO.Cards = await airbnbCards.ToListAsync();
+            AirbnbResponseDTO airbnbResponseDTO = new()
+            {
+                Count = await airbnbQuery.CountAsync(),
+                Cards = await airbnbCards.ToListAsync()
+            };
 
             return airbnbResponseDTO;
         }
 
         public async Task<AirbnbDetailResponseDTO> GetAirbnbDetails(Guid airbnbId)
         {
-            CultureInfo culture = new CultureInfo("en-IN"); // Example: Using US culture
-            var airbnbQuery = _dbContext.Airbnbs.Where(airbnb => airbnb.AirbnbId == airbnbId);
+            IQueryable<Model.Models.Airbnb> airbnbQuery = _dbContext.Airbnbs.Where(airbnb => airbnb.AirbnbId == airbnbId);
             AirbnbDetailResponseDTO airbnbDetailResponseDTO = await airbnbQuery.Select(airbnb => new AirbnbDetailResponseDTO()
             {
                 AirbnbId = airbnb.AirbnbId,
@@ -126,7 +109,7 @@ namespace Airbnb.Repository.Implementation
                 Guests = airbnb.Guests,
                 Beds = airbnb.Beds,
                 Bathrooms = airbnb.Bathrooms,
-                Price = Math.Round(airbnb.Price, 1),
+                Price = Math.Round(airbnb.Price, 2),
                 AirbnbImages = airbnb.AirbnbMedia.Select(i => i.ImageUrl).OrderBy(i => i).ToList(),
                 AirbnbAmenities = airbnb.AirbnbAmenities.Select(a => new AirbnbAmenityModel()
                 {
