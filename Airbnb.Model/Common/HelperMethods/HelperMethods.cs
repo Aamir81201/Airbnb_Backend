@@ -1,4 +1,8 @@
-﻿using System.Globalization;
+﻿using Airbnb.Model.Common.Enum;
+using Airbnb.Model.CustomModels;
+using MimeKit;
+using System.Globalization;
+using System.Web;
 
 namespace Airbnb.Model.Common.HelperMethods
 {

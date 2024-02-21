@@ -2,7 +2,7 @@
 
 namespace Airbnb.Model.DTO.Request
 {
-    public class VerifyResetPasswordRequestDTO
+    public class EmailWithTokenRequestDTO
     {
         [Required]
         public string Email { get; set; } = string.Empty;

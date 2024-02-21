@@ -9,6 +9,6 @@ namespace Airbnb.Model.DTO.Request
         public LocationModel CurrentLocation { get; set; } = new LocationModel();
         public BoundModel? Bounds { get; set; }
         public Guid? CategoryId { get; set; }
-        public SearchParams? SearchParams { get; set; }
+        public SearchParamsModel? SearchParams { get; set; }
     }
 }
