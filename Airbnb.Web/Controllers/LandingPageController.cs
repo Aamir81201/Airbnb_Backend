@@ -22,7 +22,7 @@ namespace Airbnb.Web.Controllers
             _mapper = mapper;
         }
 
-        [HttpGet("GetCategories")]
+        [HttpGet("Categories")]
         public async Task<IActionResult> GetCategories()
         {
             try
@@ -37,7 +37,7 @@ namespace Airbnb.Web.Controllers
             }
         }
 
-        [HttpPost("GetAirbnbCards")]
+        [HttpPost("AirbnbCards")]
         public async Task<IActionResult> GetAirbnbCards(AirbnbRequestDTO airbnbDto)
         {
             try
@@ -51,7 +51,7 @@ namespace Airbnb.Web.Controllers
             }
         }
 
-        [HttpGet("GetRoom")]
+        [HttpGet("Room")]
         public async Task<IActionResult> GetAirbnbRoom(Guid airbnbId)
         {
             try

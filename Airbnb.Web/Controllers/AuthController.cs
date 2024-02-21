@@ -173,7 +173,7 @@ namespace Airbnb.Web.Controllers
                     await _signInManager.SignInAsync(user, false);
 
                     string token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-                    EmailConfigurationModel emailConfiguration = _configuration.GetSection(nameof(EmailConfigurationModel)).Get<EmailConfigurationModel>();
+                    EmailConfigurationModel emailConfiguration = _configuration.GetSection("EmailConfiguration").Get<EmailConfigurationModel>();
                     EmailMessageModel message = AuthHelper.GenerateEmailVerificationEmailMessage(user.Email, user.FirstName, token, _environment.ContentRootPath, _configuration.GetValue<string>("Link"));
                     await _emailService.SendEmailAsync(message, emailConfiguration);
                     string jwtToken = AuthHelper.GenerateToken(user, RoleEmum.User.ToString(), _configuration);
@@ -190,7 +190,6 @@ namespace Airbnb.Web.Controllers
                 return BadRequest();
             }
         }
-
 
         [HttpPost("PreExternalAuthentication")]
         public async Task<IActionResult> PreExternalAuthentication(UserExternalAuthRequestDTO userExternalAuthRequestDTO)
@@ -278,7 +277,7 @@ namespace Airbnb.Web.Controllers
 
                                 await _userManager.CreateAsync(user);
                                 string token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-                                EmailConfigurationModel emailConfiguration = _configuration.GetSection(nameof(EmailConfigurationModel)).Get<EmailConfigurationModel>();
+                                EmailConfigurationModel emailConfiguration = _configuration.GetSection("EmailConfiguration").Get<EmailConfigurationModel>();
                                 EmailMessageModel message = AuthHelper.GenerateEmailVerificationEmailMessage(user.Email, user.FirstName, token, _environment.ContentRootPath, _configuration.GetValue<string>("Link"));
                                 await _emailService.SendEmailAsync(message, emailConfiguration);
                                 await _userManager.AddToRoleAsync(user, RoleEmum.User.ToString());
@@ -310,8 +309,8 @@ namespace Airbnb.Web.Controllers
                     return Ok(false);
                 }
                 string token = await _userManager.GeneratePasswordResetTokenAsync(user);
-                EmailConfigurationModel emailConfiguration = _configuration.GetSection(nameof(EmailConfigurationModel)).Get<EmailConfigurationModel>();
-                EmailMessageModel message = AuthHelper.GenerateEmailVerificationEmailMessage(user.Email, user.FirstName, token, _environment.ContentRootPath, _configuration.GetValue<string>("Link"));
+                EmailConfigurationModel emailConfiguration = _configuration.GetSection("EmailConfiguration").Get<EmailConfigurationModel>();
+                EmailMessageModel message = AuthHelper.GenerateResetPasswordEmailMessage(user.Email, user.FirstName, token, _environment.ContentRootPath, _configuration.GetValue<string>("Link"));
                 await _emailService.SendEmailAsync(message, emailConfiguration);
                 return Ok(true);
             }
@@ -337,7 +336,7 @@ namespace Airbnb.Web.Controllers
         }
 
         [HttpGet("VerifyResetPassword")]
-        public async Task<IActionResult> VerifyResetPassword(EmailWithTokenRequestDTO verifyResetPasswordRequestDTO)
+        public async Task<IActionResult> VerifyResetPassword([FromQuery]EmailWithTokenRequestDTO verifyResetPasswordRequestDTO)
         {
             ApplicationUser? user = await _userManager.FindByEmailAsync(verifyResetPasswordRequestDTO.Email);
             if (user != null)

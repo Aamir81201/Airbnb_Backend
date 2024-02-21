@@ -15,6 +15,8 @@ namespace Airbnb.Web.Helper
             services.AddScoped<IAirbnbCategoryService, AirbnbCategoryService>();
             services.AddScoped<IAirbnbAmenityRepository, AirbnbAmenityRepository>();
             services.AddScoped<IAirbnbRepository, AirbnbRepository>();
+
+            services.AddScoped<IEmailService, EmailService>();
         }
     }
 }
