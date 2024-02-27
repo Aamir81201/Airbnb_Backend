@@ -38,11 +38,11 @@ namespace Airbnb.Web.Controllers
         }
 
         [HttpPost("AirbnbCards")]
-        public async Task<IActionResult> GetAirbnbCards(AirbnbRequestDTO airbnbDto)
+        public async Task<IActionResult> GetAirbnbCards([FromBody] AirbnbRequestDTO airbnbRequestDto)
         {
             try
             {
-                AirbnbResponseDTO airbnbResponseDTO = await _airbnbService.GetAirbnbCards(airbnbDto);
+                AirbnbResponseDTO airbnbResponseDTO = await _airbnbService.GetAirbnbCards(airbnbRequestDto);
                 return Ok(airbnbResponseDTO);
             }
             catch
@@ -52,12 +52,12 @@ namespace Airbnb.Web.Controllers
         }
 
         [HttpGet("Room")]
-        public async Task<IActionResult> GetAirbnbRoom(Guid airbnbId)
+        public async Task<IActionResult> GetAirbnbDetail(Guid airbnbId)
         {
             try
             {
-                AirbnbDetailResponseDTO airbnbDetailsDTO = await _airbnbService.GetAirbnbDetails(airbnbId);
-                return Ok(airbnbDetailsDTO);
+                AirbnbDetailResponseDTO airbnbDetailResponseDTO = await _airbnbService.GetAirbnbDetail(airbnbId);
+                return Ok(airbnbDetailResponseDTO);
             }
             catch
             {

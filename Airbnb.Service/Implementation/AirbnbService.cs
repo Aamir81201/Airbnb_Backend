@@ -18,9 +18,9 @@ namespace Airbnb.Service.Implementation
             return await _airbnbRepository.GetAirbnbCards(airbnbRequestDTO);
         }
 
-        public async Task<AirbnbDetailResponseDTO> GetAirbnbDetails(Guid airbnbId)
+        public async Task<AirbnbDetailResponseDTO> GetAirbnbDetail(Guid airbnbId)
         {
-            return await _airbnbRepository.GetAirbnbDetails(airbnbId);
+            return await _airbnbRepository.GetAirbnbDetail(airbnbId);
         }
     }
 }

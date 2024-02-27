@@ -7,6 +7,6 @@ namespace Airbnb.Service.Interface
     {
         Task<AirbnbResponseDTO> GetAirbnbCards(AirbnbRequestDTO airbnbRequestDTO);
 
-        Task<AirbnbDetailResponseDTO> GetAirbnbDetails(Guid airbnbId);
+        Task<AirbnbDetailResponseDTO> GetAirbnbDetail(Guid airbnbId);
     }
 }

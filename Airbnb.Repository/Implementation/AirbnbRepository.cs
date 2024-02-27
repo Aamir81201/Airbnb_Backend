@@ -93,7 +93,7 @@ namespace Airbnb.Repository.Implementation
             return airbnbResponseDTO;
         }
 
-        public async Task<AirbnbDetailResponseDTO> GetAirbnbDetails(Guid airbnbId)
+        public async Task<AirbnbDetailResponseDTO> GetAirbnbDetail(Guid airbnbId)
         {
             IQueryable<Model.Models.Airbnb> airbnbQuery = _dbContext.Airbnbs.Where(airbnb => airbnb.AirbnbId == airbnbId);
             AirbnbDetailResponseDTO airbnbDetailResponseDTO = await airbnbQuery.Select(airbnb => new AirbnbDetailResponseDTO()

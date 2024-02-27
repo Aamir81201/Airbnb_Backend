@@ -159,7 +159,7 @@ namespace Airbnb.Web.Controllers
         //}
 
         [HttpPost("Signup")]
-        public async Task<IActionResult> Signup(SignupRequestDTO signupRequestDTO)
+        public async Task<IActionResult> Signup([FromBody] SignupRequestDTO signupRequestDTO)
         {
             try
             {
@@ -192,7 +192,7 @@ namespace Airbnb.Web.Controllers
         }
 
         [HttpPost("PreExternalAuthentication")]
-        public async Task<IActionResult> PreExternalAuthentication(UserExternalAuthRequestDTO userExternalAuthRequestDTO)
+        public async Task<IActionResult> PreExternalAuthentication([FromBody] UserExternalAuthRequestDTO userExternalAuthRequestDTO)
         {
             try
             {
@@ -255,7 +255,7 @@ namespace Airbnb.Web.Controllers
         }
 
         [HttpPost("ExternalSignUp")]
-        public async Task<IActionResult> ExternalSignUp(SignupRequestDTO signupRequestDTO)
+        public async Task<IActionResult> ExternalSignUp([FromBody] SignupRequestDTO signupRequestDTO)
         {
             try
             {
@@ -321,7 +321,7 @@ namespace Airbnb.Web.Controllers
         }
 
         [HttpGet("ConfirmEmail")]
-        public async Task<IActionResult> ConfirmEmail(EmailWithTokenRequestDTO confirmEmailRequestDTO)
+        public async Task<IActionResult> ConfirmEmail([FromQuery] EmailWithTokenRequestDTO confirmEmailRequestDTO)
         {
             ApplicationUser? user = await _userManager.FindByEmailAsync(confirmEmailRequestDTO.Email);
             if (user != null)
@@ -336,7 +336,7 @@ namespace Airbnb.Web.Controllers
         }
 
         [HttpGet("VerifyResetPassword")]
-        public async Task<IActionResult> VerifyResetPassword([FromQuery]EmailWithTokenRequestDTO verifyResetPasswordRequestDTO)
+        public async Task<IActionResult> VerifyResetPassword([FromQuery] EmailWithTokenRequestDTO verifyResetPasswordRequestDTO)
         {
             ApplicationUser? user = await _userManager.FindByEmailAsync(verifyResetPasswordRequestDTO.Email);
             if (user != null)
@@ -353,7 +353,7 @@ namespace Airbnb.Web.Controllers
         }
 
         [HttpPost("ResetPassword")]
-        public async Task<IActionResult> ResetPassword(ResetPasswordRequestDTO resetPasswordRequestDTO)
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequestDTO resetPasswordRequestDTO)
         {
             try
             {
