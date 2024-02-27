@@ -2,8 +2,8 @@
 {
     public class SearchParamsModel
     {
-        public RegionModel? Region { get; set; }
-
+        //public RegionModel? Region { get; set; }
+        public string PlaceId { get; set; } = string.Empty;
         public BoundModel? Bounds { get; set; }
 
         public GuestModel? Guests { get; set; }

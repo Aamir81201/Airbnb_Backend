@@ -75,8 +75,8 @@ namespace Airbnb.Web.Controllers
             }
         }
 
-        [HttpPost("UserProfiles")]
-        public async Task<IActionResult> GetUserProfiles(IEnumerable<Guid> userIds)
+        [HttpGet("UserProfiles")]
+        public async Task<IActionResult> GetUserProfiles([FromQuery] IEnumerable<Guid> userIds)
         {
             try
             {
@@ -235,7 +235,6 @@ namespace Airbnb.Web.Controllers
                             IEnumerable<string> roles = await _userManager.GetRolesAsync(user);
 
                             string jwtToken = AuthHelper.GenerateToken(user, roles.First(), _configuration);
-
                             UserStateResponseDTO userState = new()
                             {
                                 State = PreSignupEnum.login.ToString(),
