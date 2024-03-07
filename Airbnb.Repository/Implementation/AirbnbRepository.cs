@@ -67,7 +67,7 @@ namespace Airbnb.Repository.Implementation
                 AirbnbId = airbnb.AirbnbId,
                 Title = (longTitle ? airbnb.Category.Name + " in " : string.Empty) + airbnb.City + ", " + airbnb.Country,
                 AirbnbImages = airbnb.AirbnbMedia.Select(media => media.ImageUrl).OrderBy(c => c).ToList(),
-                Distance = HelperMethods.GetDistance(airbnb.Longitude ?? 0, airbnb.Latitude ?? 0, airbnbRequestDTO.CurrentLocation.Lng, airbnbRequestDTO.CurrentLocation.Lat),
+                Distance = HelperMethods.GetDistance(airbnb.Longitude, airbnb.Latitude, airbnbRequestDTO.CurrentLocation.Lng, airbnbRequestDTO.CurrentLocation.Lat),
                 Latitude = airbnb.Latitude,
                 Longitude = airbnb.Longitude,
                 CategoryName = airbnb.Category.Name,

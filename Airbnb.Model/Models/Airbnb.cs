@@ -12,9 +12,9 @@ public partial class Airbnb
 
     public string Country { get; set; } = null!;
 
-    public long? Latitude { get; set; }
+    public double Latitude { get; set; }
 
-    public long? Longitude { get; set; }
+    public double Longitude { get; set; }
 
     public decimal Price { get; set; }
 

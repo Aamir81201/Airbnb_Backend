@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Airbnb.Model.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240306055006_InitialMigration")]
+    [Migration("20240307063051_InitialMigration")]
     partial class InitialMigration
     {
         /// <inheritdoc />
@@ -71,11 +71,11 @@ namespace Airbnb.Model.Migrations
                     b.Property<Guid>("HostId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<long?>("Latitude")
-                        .HasColumnType("bigint");
+                    b.Property<double>("Latitude")
+                        .HasColumnType("float");
 
-                    b.Property<long?>("Longitude")
-                        .HasColumnType("bigint");
+                    b.Property<double>("Longitude")
+                        .HasColumnType("float");
 
                     b.Property<string>("Name")
                         .IsRequired()
