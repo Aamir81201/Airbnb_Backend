@@ -82,7 +82,7 @@ namespace Airbnb.Web.Controllers
             {
                 IEnumerable<ApplicationUser> users = await _userManager.Users.Where(user => userIds.Contains(user.Id)).ToListAsync();
                 IEnumerable<UserProfileResponseDTO> userProfile = _mapper.Map<IEnumerable<UserProfileResponseDTO>>(users);
-                userProfile.ToList().ForEach(userProfile => userProfile.Provider = _userManager.GetLoginsAsync(users.Where(user => user.Id == userProfile.UserId).Single()).Result.FirstOrDefault()?.LoginProvider);
+                userProfile.ToList().ForEach(userProfile => userProfile.Provider = _userManager.GetLoginsAsync(users.Where(user => user.Id == userProfile.UserId).Single()).GetAwaiter().GetResult().FirstOrDefault()?.LoginProvider);
                 return Ok(userProfile);
             }
             catch
@@ -169,6 +169,14 @@ namespace Airbnb.Web.Controllers
 
                 if (result.Succeeded)
                 {
+                    if(!_roleManager.RoleExistsAsync(RoleEmum.Admin.ToString()).GetAwaiter().GetResult())
+                    {
+                        await _roleManager.CreateAsync(new IdentityRole<Guid>(RoleEmum.Admin.ToString()));
+                    }
+                    if (!_roleManager.RoleExistsAsync(RoleEmum.User.ToString()).GetAwaiter().GetResult())
+                    {
+                        await _roleManager.CreateAsync(new IdentityRole<Guid>(RoleEmum.User.ToString()));
+                    }
                     await _userManager.AddToRoleAsync(user, RoleEmum.User.ToString());
                     await _signInManager.SignInAsync(user, false);
 

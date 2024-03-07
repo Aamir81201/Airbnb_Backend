@@ -12,9 +12,5 @@ public partial class AirbnbMedium
 
     public bool HeroImage { get; set; }
 
-    public DateTime CreatedAt { get; set; }
-
-    public DateTime? ModifiedAt { get; set; }
-
     public virtual Airbnb Airbnb { get; set; } = null!;
 }

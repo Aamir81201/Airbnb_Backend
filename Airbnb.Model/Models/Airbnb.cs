@@ -12,9 +12,9 @@ public partial class Airbnb
 
     public string Country { get; set; } = null!;
 
-    public double? Latitude { get; set; }
+    public long? Latitude { get; set; }
 
-    public double? Longitude { get; set; }
+    public long? Longitude { get; set; }
 
     public decimal Price { get; set; }
 
@@ -32,9 +32,7 @@ public partial class Airbnb
 
     public Guid HostId { get; set; }
 
-    public DateTime CreatedAt { get; set; }
-
-    public DateTime? ModifiedAt { get; set; }
+    public DateTime DateCreated { get; set; }
 
     public virtual ICollection<AirbnbAmenity> AirbnbAmenities { get; set; } = new List<AirbnbAmenity>();
 
@@ -44,5 +42,5 @@ public partial class Airbnb
 
     public virtual AirbnbCategory Category { get; set; } = null!;
 
-    public virtual AspNetUser Host { get; set; } = null!;
+    public virtual ApplicationUser Host { get; set; } = null!;
 }

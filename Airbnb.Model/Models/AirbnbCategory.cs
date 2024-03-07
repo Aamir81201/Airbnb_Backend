@@ -8,11 +8,5 @@ public partial class AirbnbCategory
 
     public string Icon { get; set; } = null!;
 
-    public DateTime CreatedAt { get; set; }
-
-    public DateTime? ModifiedAt { get; set; }
-
     public virtual ICollection<Airbnb> Airbnbs { get; set; } = new List<Airbnb>();
-
-    public virtual ICollection<Airbnbtemp> Airbnbtemps { get; set; } = new List<Airbnbtemp>();
 }

@@ -1,15 +1,54 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace Airbnb.Model.Migrations
 {
     /// <inheritdoc />
-    public partial class IdentityMigration : Migration
+    public partial class InitialMigration : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.CreateTable(
+                name: "AirbnbCategories",
+                columns: table => new
+                {
+                    AirbnbCategoryId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Name = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: false),
+                    Icon = table.Column<string>(type: "varchar(50)", unicode: false, maxLength: 50, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AirbnbCategories", x => x.AirbnbCategoryId);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "AirbnbTypes",
+                columns: table => new
+                {
+                    AirbnbTypeId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Name = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: false),
+                    Icon = table.Column<string>(type: "varchar(50)", unicode: false, maxLength: 50, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AirbnbTypes", x => x.AirbnbTypeId);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "AmenityTypes",
+                columns: table => new
+                {
+                    AmenityTypeId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Name = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AmenityTypes", x => x.AmenityTypeId);
+                });
+
             migrationBuilder.CreateTable(
                 name: "AspNetRoles",
                 columns: table => new
@@ -31,14 +70,12 @@ namespace Airbnb.Model.Migrations
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     FirstName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     LastName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
-                    Password = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    DateOfBirth = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DateOfBirth = table.Column<DateTime>(type: "datetime2", nullable: true),
                     Avatar = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     RecieveMarketingMessages = table.Column<bool>(type: "bit", nullable: false),
-                    Role = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedEmail = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     EmailConfirmed = table.Column<bool>(type: "bit", nullable: false),
                     PasswordHash = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -54,6 +91,25 @@ namespace Airbnb.Model.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AspNetUsers", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Amenities",
+                columns: table => new
+                {
+                    AmenityId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Name = table.Column<string>(type: "varchar(200)", unicode: false, maxLength: 200, nullable: false),
+                    Icon = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: false),
+                    AmenityTypeId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Amenities", x => x.AmenityId);
+                    table.ForeignKey(
+                        name: "FK_Amenities_AmenityTypes_AmenityTypeId",
+                        column: x => x.AmenityTypeId,
+                        principalTable: "AmenityTypes",
+                        principalColumn: "AmenityTypeId");
                 });
 
             migrationBuilder.CreateTable(
@@ -75,6 +131,47 @@ namespace Airbnb.Model.Migrations
                         principalTable: "AspNetRoles",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Airbnbs",
+                columns: table => new
+                {
+                    AirbnbId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Name = table.Column<string>(type: "varchar(200)", unicode: false, maxLength: 200, nullable: false),
+                    Description = table.Column<string>(type: "varchar(max)", unicode: false, nullable: false),
+                    City = table.Column<string>(type: "varchar(200)", unicode: false, maxLength: 200, nullable: false),
+                    Country = table.Column<string>(type: "varchar(200)", unicode: false, maxLength: 200, nullable: false),
+                    Latitude = table.Column<long>(type: "bigint", nullable: true),
+                    Longitude = table.Column<long>(type: "bigint", nullable: true),
+                    Price = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    Guests = table.Column<int>(type: "int", nullable: false),
+                    Bedrooms = table.Column<int>(type: "int", nullable: false),
+                    Beds = table.Column<int>(type: "int", nullable: false),
+                    Bathrooms = table.Column<decimal>(type: "decimal(3,1)", nullable: false),
+                    AirbnbTypeId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    CategoryId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    HostId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    DateCreated = table.Column<DateTime>(type: "datetime", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Airbnbs", x => x.AirbnbId);
+                    table.ForeignKey(
+                        name: "FK_Airbnbs_AirbnbCategories_CategoryId",
+                        column: x => x.CategoryId,
+                        principalTable: "AirbnbCategories",
+                        principalColumn: "AirbnbCategoryId");
+                    table.ForeignKey(
+                        name: "FK_Airbnbs_AirbnbTypes_AirbnbTypeId",
+                        column: x => x.AirbnbTypeId,
+                        principalTable: "AirbnbTypes",
+                        principalColumn: "AirbnbTypeId");
+                    table.ForeignKey(
+                        name: "FK_Airbnbs_AspNetUsers_HostId",
+                        column: x => x.HostId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -162,6 +259,84 @@ namespace Airbnb.Model.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "AirbnbAmenities",
+                columns: table => new
+                {
+                    AirbnbAmenityId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    AmenityId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    AirbnbId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AirbnbAmenities", x => x.AirbnbAmenityId);
+                    table.ForeignKey(
+                        name: "FK_AirbnbAmenities_Airbnbs_AirbnbId",
+                        column: x => x.AirbnbId,
+                        principalTable: "Airbnbs",
+                        principalColumn: "AirbnbId");
+                    table.ForeignKey(
+                        name: "FK_AirbnbAmenities_Amenities_AmenityId",
+                        column: x => x.AmenityId,
+                        principalTable: "Amenities",
+                        principalColumn: "AmenityId");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "AirbnbMedia",
+                columns: table => new
+                {
+                    AirbnbMediaId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    AirbnbId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ImageUrl = table.Column<string>(type: "varchar(max)", unicode: false, nullable: false),
+                    Name = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: false),
+                    HeroImage = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AirbnbMedia", x => x.AirbnbMediaId);
+                    table.ForeignKey(
+                        name: "FK_AirbnbMedia_Airbnbs_AirbnbId",
+                        column: x => x.AirbnbId,
+                        principalTable: "Airbnbs",
+                        principalColumn: "AirbnbId");
+                });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AirbnbAmenities_AirbnbId",
+                table: "AirbnbAmenities",
+                column: "AirbnbId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AirbnbAmenities_AmenityId",
+                table: "AirbnbAmenities",
+                column: "AmenityId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AirbnbMedia_AirbnbId",
+                table: "AirbnbMedia",
+                column: "AirbnbId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Airbnbs_AirbnbTypeId",
+                table: "Airbnbs",
+                column: "AirbnbTypeId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Airbnbs_CategoryId",
+                table: "Airbnbs",
+                column: "CategoryId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Airbnbs_HostId",
+                table: "Airbnbs",
+                column: "HostId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Amenities_AmenityTypeId",
+                table: "Amenities",
+                column: "AmenityTypeId");
+
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
                 table: "AspNetRoleClaims",
@@ -206,6 +381,12 @@ namespace Airbnb.Model.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
+                name: "AirbnbAmenities");
+
+            migrationBuilder.DropTable(
+                name: "AirbnbMedia");
+
+            migrationBuilder.DropTable(
                 name: "AspNetRoleClaims");
 
             migrationBuilder.DropTable(
@@ -221,7 +402,22 @@ namespace Airbnb.Model.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
+                name: "Amenities");
+
+            migrationBuilder.DropTable(
+                name: "Airbnbs");
+
+            migrationBuilder.DropTable(
                 name: "AspNetRoles");
+
+            migrationBuilder.DropTable(
+                name: "AmenityTypes");
+
+            migrationBuilder.DropTable(
+                name: "AirbnbCategories");
+
+            migrationBuilder.DropTable(
+                name: "AirbnbTypes");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");
