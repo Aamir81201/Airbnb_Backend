@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Airbnb.Model.Common.Enum;
+using System.ComponentModel.DataAnnotations;
 
 namespace Airbnb.Model.DTO.Request
 {

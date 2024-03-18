@@ -18,10 +18,10 @@ namespace Airbnb.Model.Common.HelperMethods
         {
             IEnumerable<Claim> claims = new List<Claim>()
             {
-                new("role",  role),
-                new("userId",  user.Id.ToString()),
-                new("name", user.FirstName),
-                new("email", user.Email)
+                new(ClaimTypes.Role,  role),
+                new(ClaimTypes.NameIdentifier,  user.Id.ToString()),
+                new(ClaimTypes.Name, user.FirstName),
+                new(ClaimTypes.Email, user.Email)
             };
 
             SymmetricSecurityKey authSigningKey = new(Encoding.UTF8.GetBytes(_configuration["JwtSettings:Secret"]!));

@@ -2,7 +2,7 @@
 {
     public enum ProviderEnum
     {
-        GOOGLE,
+        GOOGLE = 0,
         Facebook,
         Email
     }

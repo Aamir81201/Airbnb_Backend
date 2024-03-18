@@ -1,6 +1,6 @@
 ﻿namespace Airbnb.Model.Common.Enum
 {
-    public enum PreSignupEnum
+    public enum UserState
     {
         login,
         password,

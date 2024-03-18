@@ -11,6 +11,7 @@ using Airbnb.Model.Common.HelperMethods;
 using Airbnb.Service.Interface;
 using Airbnb.Model.CustomModels;
 using AutoMapper;
+using System.Data;
 
 namespace Airbnb.Web.Controllers
 {
@@ -38,7 +39,7 @@ namespace Airbnb.Web.Controllers
             _mapper = mapper;
         }
 
-        [HttpGet("IsUserExists")]
+        [HttpGet("IsUserExists/{email}")]
         public async Task<IActionResult> IsUserExists(string email)
         {
             try
@@ -52,7 +53,7 @@ namespace Airbnb.Web.Controllers
             }
         }
 
-        [HttpGet("UserProfile")]
+        [HttpGet("UserProfile/{email}")]
         public async Task<IActionResult> GetUserProfile(string email)
         {
             try
@@ -65,7 +66,7 @@ namespace Airbnb.Web.Controllers
                 else
                 {
                     UserProfileResponseDTO userProfileResponseDTO = _mapper.Map<UserProfileResponseDTO>(user);
-                    userProfileResponseDTO.Provider = (await _userManager.GetLoginsAsync(user)).FirstOrDefault()?.LoginProvider;
+                    userProfileResponseDTO.Provider = _userManager.GetLoginsAsync(user).GetAwaiter().GetResult().FirstOrDefault()?.LoginProvider;
                     return Ok(userProfileResponseDTO);
                 }
             }
@@ -75,8 +76,33 @@ namespace Airbnb.Web.Controllers
             }
         }
 
-        [HttpGet("UserProfiles")]
-        public async Task<IActionResult> GetUserProfiles([FromQuery] IEnumerable<Guid> userIds)
+        [Authorize]
+        [HttpGet("UserProfile")]
+        public async Task<IActionResult> GetUserProfile()
+        {
+            try
+            {
+                string userId = _userManager.GetUserId(User);
+                ApplicationUser? user = await _userManager.FindByIdAsync(userId);
+                if (user == null)
+                {
+                    return BadRequest();
+                }
+                else
+                {
+                    UserProfileResponseDTO userProfileResponseDTO = _mapper.Map<UserProfileResponseDTO>(user);
+                    userProfileResponseDTO.Provider = _userManager.GetLoginsAsync(user).GetAwaiter().GetResult().FirstOrDefault()?.LoginProvider;
+                    return Ok(userProfileResponseDTO);
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex);
+            }
+        }
+
+        [HttpPost("UserProfiles")]
+        public async Task<IActionResult> GetUserProfiles([FromBody] IEnumerable<Guid> userIds)
         {
             try
             {
@@ -104,11 +130,18 @@ namespace Airbnb.Web.Controllers
                     if (signIn.Succeeded)
                     {
                         IEnumerable<string> roles = await _userManager.GetRolesAsync(user);
-                        string jwtToken = AuthHelper.GenerateToken(user, roles.First(), _configuration);
-                        return Ok(jwtToken);
+                        UserLoginResponseDTO userLoginResponseDTO = new()
+                        {
+                            Token = AuthHelper.GenerateToken(user, roles.First(), _configuration)
+                        };
+                        return Ok(userLoginResponseDTO);
                     }
+                    return BadRequest(new { title = "Invalid", message = "Invalid login details. Please try again." });
                 }
-                return BadRequest(new { title = "Invalid", message = "Invalid login details. Please try again." });
+                else
+                {
+                    return BadRequest(new { title = "Invalid", message = "Invalid login details. Please try again." });
+                }
             }
             catch
             {
@@ -163,35 +196,45 @@ namespace Airbnb.Web.Controllers
         {
             try
             {
-                ApplicationUser user = _mapper.Map<ApplicationUser>(signupRequestDTO);
+                ApplicationUser? user = _mapper.Map<ApplicationUser>(signupRequestDTO);
 
-                IdentityResult result = await _userManager.CreateAsync(user, signupRequestDTO.Password);
-
-                if (result.Succeeded)
+                if (signupRequestDTO.IsExternal)
                 {
-                    if(!_roleManager.RoleExistsAsync(RoleEmum.Admin.ToString()).GetAwaiter().GetResult())
+                    switch (signupRequestDTO.ExternalUserAuth?.Provider)
                     {
-                        await _roleManager.CreateAsync(new IdentityRole<Guid>(RoleEmum.Admin.ToString()));
-                    }
-                    if (!_roleManager.RoleExistsAsync(RoleEmum.User.ToString()).GetAwaiter().GetResult())
-                    {
-                        await _roleManager.CreateAsync(new IdentityRole<Guid>(RoleEmum.User.ToString()));
-                    }
-                    await _userManager.AddToRoleAsync(user, RoleEmum.User.ToString());
-                    await _signInManager.SignInAsync(user, false);
+                        case "GOOGLE":
+                            {
+                                GoogleJsonWebSignature.Payload? payload = await AuthHelper.VerifyGoogleToken(signupRequestDTO.ExternalUserAuth, _configuration);
 
-                    string token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-                    EmailConfigurationModel emailConfiguration = _configuration.GetSection("EmailConfiguration").Get<EmailConfigurationModel>();
-                    EmailMessageModel message = AuthHelper.GenerateEmailVerificationEmailMessage(user.Email, user.FirstName, token, _environment.ContentRootPath, _configuration.GetValue<string>("Link"));
-                    await _emailService.SendEmailAsync(message, emailConfiguration);
-                    string jwtToken = AuthHelper.GenerateToken(user, RoleEmum.User.ToString(), _configuration);
-
-                    return Ok(jwtToken);
+                                if (payload != null)
+                                {
+                                    UserLoginInfo info = new(signupRequestDTO.ExternalUserAuth.Provider.ToString(), payload.Subject, signupRequestDTO.ExternalUserAuth.Provider.ToString());
+                                    user.Avatar = payload.Picture;
+                                    await _userManager.CreateAsync(user);
+                                    await _userManager.AddToRoleAsync(user, RoleEmum.User.ToString());
+                                    await _signInManager.SignInAsync(user, false);
+                                    await _userManager.AddLoginAsync(user, info);
+                                }
+                            }
+                            break;
+                    }
                 }
                 else
                 {
-                    return BadRequest();
+                    await _userManager.CreateAsync(user, signupRequestDTO.Password);
+                    await _userManager.AddToRoleAsync(user, RoleEmum.User.ToString());
+                    await _signInManager.SignInAsync(user, false);
                 }
+
+                string token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                EmailConfigurationModel emailConfiguration = _configuration.GetSection("EmailConfiguration").Get<EmailConfigurationModel>();
+                EmailMessageModel message = AuthHelper.GenerateEmailVerificationEmailMessage(user.Email, user.FirstName, token, _environment.ContentRootPath, _configuration.GetValue<string>("Link"));
+                await _emailService.SendEmailAsync(message, emailConfiguration);
+                UserLoginResponseDTO userLoginResponseDTO = new()
+                {
+                    Token = AuthHelper.GenerateToken(user, RoleEmum.User.ToString(), _configuration)
+                };
+                return Ok(userLoginResponseDTO);
             }
             catch
             {
@@ -199,8 +242,8 @@ namespace Airbnb.Web.Controllers
             }
         }
 
-        [HttpPost("PreExternalAuthentication")]
-        public async Task<IActionResult> PreExternalAuthentication([FromBody] UserExternalAuthRequestDTO userExternalAuthRequestDTO)
+        [HttpPost("UserExternalAuth")]
+        public async Task<IActionResult> UserExternalAuth(UserExternalAuthRequestDTO userExternalAuthRequestDTO)
         {
             try
             {
@@ -210,7 +253,7 @@ namespace Airbnb.Web.Controllers
 
                     if (payload != null)
                     {
-                        UserLoginInfo info = new(userExternalAuthRequestDTO.Provider, payload.Subject, userExternalAuthRequestDTO.Provider);
+                        UserLoginInfo info = new(userExternalAuthRequestDTO.Provider.ToString(), payload.Subject, userExternalAuthRequestDTO.Provider.ToString());
                         ApplicationUser? user = await _userManager.FindByLoginAsync(info.LoginProvider, info.ProviderKey);
                         if (user == null)
                         {
@@ -219,7 +262,7 @@ namespace Airbnb.Web.Controllers
                             {
                                 UserStateResponseDTO userState = new()
                                 {
-                                    State = PreSignupEnum.signup.ToString()
+                                    State = UserState.signup
                                 };
 
                                 return Ok(userState);
@@ -230,7 +273,7 @@ namespace Airbnb.Web.Controllers
                                 userProfile.Provider = _userManager.GetLoginsAsync(user).Result.FirstOrDefault()?.LoginProvider;
                                 UserStateResponseDTO userState = new()
                                 {
-                                    State = PreSignupEnum.password.ToString(),
+                                    State = UserState.password,
                                     UserProfile = userProfile
                                 };
 
@@ -242,11 +285,10 @@ namespace Airbnb.Web.Controllers
 
                             IEnumerable<string> roles = await _userManager.GetRolesAsync(user);
 
-                            string jwtToken = AuthHelper.GenerateToken(user, roles.First(), _configuration);
                             UserStateResponseDTO userState = new()
                             {
-                                State = PreSignupEnum.login.ToString(),
-                                Token = jwtToken
+                                State = UserState.login,
+                                Token = AuthHelper.GenerateToken(user, roles.First(), _configuration)
                             };
 
                             return Ok(userState);
@@ -261,51 +303,51 @@ namespace Airbnb.Web.Controllers
             }
         }
 
-        [HttpPost("ExternalSignUp")]
-        public async Task<IActionResult> ExternalSignUp([FromBody] SignupRequestDTO signupRequestDTO)
-        {
-            try
-            {
-                if (signupRequestDTO.ExternalUserAuth!.Provider == ProviderEnum.GOOGLE.ToString())
-                {
-                    GoogleJsonWebSignature.Payload? payload = await AuthHelper.VerifyGoogleToken(signupRequestDTO.ExternalUserAuth, _configuration);
+        //[HttpPost("ExternalSignUp")]
+        //public async Task<IActionResult> ExternalSignUp([FromBody] SignupRequestDTO signupRequestDTO)
+        //{
+        //    try
+        //    {
+        //        if (signupRequestDTO.ExternalUserAuth!.Provider == ProviderEnum.GOOGLE.ToString())
+        //        {
+        //            GoogleJsonWebSignature.Payload? payload = await AuthHelper.VerifyGoogleToken(signupRequestDTO.ExternalUserAuth, _configuration);
 
-                    if (payload != null)
-                    {
-                        UserLoginInfo info = new(signupRequestDTO.ExternalUserAuth.Provider, payload.Subject, signupRequestDTO.ExternalUserAuth.Provider);
-                        ApplicationUser? user = await _userManager.FindByLoginAsync(info.LoginProvider, info.ProviderKey);
-                        if (user == null)
-                        {
-                            user = await _userManager.FindByEmailAsync(payload.Email);
-                            if (user == null)
-                            {
-                                user = _mapper.Map<ApplicationUser>(signupRequestDTO);
-                                user.Avatar = payload.Picture;
+        //            if (payload != null)
+        //            {
+        //                UserLoginInfo info = new(signupRequestDTO.ExternalUserAuth.Provider, payload.Subject, signupRequestDTO.ExternalUserAuth.Provider);
+        //                ApplicationUser? user = await _userManager.FindByLoginAsync(info.LoginProvider, info.ProviderKey);
+        //                if (user == null)
+        //                {
+        //                    user = await _userManager.FindByEmailAsync(payload.Email);
+        //                    if (user == null)
+        //                    {
+        //                        user = _mapper.Map<ApplicationUser>(signupRequestDTO);
+        //                        user.Avatar = payload.Picture;
 
-                                await _userManager.CreateAsync(user);
-                                string token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-                                EmailConfigurationModel emailConfiguration = _configuration.GetSection("EmailConfiguration").Get<EmailConfigurationModel>();
-                                EmailMessageModel message = AuthHelper.GenerateEmailVerificationEmailMessage(user.Email, user.FirstName, token, _environment.ContentRootPath, _configuration.GetValue<string>("Link"));
-                                await _emailService.SendEmailAsync(message, emailConfiguration);
-                                await _userManager.AddToRoleAsync(user, RoleEmum.User.ToString());
-                                await _userManager.AddLoginAsync(user, info);
+        //                        await _userManager.CreateAsync(user);
+        //                        string token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+        //                        EmailConfigurationModel emailConfiguration = _configuration.GetSection("EmailConfiguration").Get<EmailConfigurationModel>();
+        //                        EmailMessageModel message = AuthHelper.GenerateEmailVerificationEmailMessage(user.Email, user.FirstName, token, _environment.ContentRootPath, _configuration.GetValue<string>("Link"));
+        //                        await _emailService.SendEmailAsync(message, emailConfiguration);
+        //                        await _userManager.AddToRoleAsync(user, RoleEmum.User.ToString());
+        //                        await _userManager.AddLoginAsync(user, info);
 
-                                string jwtToken = AuthHelper.GenerateToken(user, RoleEmum.User.ToString(), _configuration);
+        //                        string jwtToken = AuthHelper.GenerateToken(user, RoleEmum.User.ToString(), _configuration);
 
-                                return Ok(jwtToken);
-                            }
-                        }
-                    }
-                }
-                return BadRequest();
-            }
-            catch
-            {
-                return BadRequest();
-            }
-        }
+        //                        return Ok(jwtToken);
+        //                    }
+        //                }
+        //            }
+        //        }
+        //        return BadRequest();
+        //    }
+        //    catch
+        //    {
+        //        return BadRequest();
+        //    }
+        //}
 
-        [HttpGet("SendResetPasswordMail")]
+        [HttpGet("SendResetPasswordMail/{email}")]
         public async Task<IActionResult> SendResetPasswordMail(string email)
         {
             try
@@ -375,8 +417,11 @@ namespace Airbnb.Web.Controllers
                 if (result.Succeeded)
                 {
                     IEnumerable<string> roles = await _userManager.GetRolesAsync(user);
-                    string jwtToken = AuthHelper.GenerateToken(user, roles.First(), _configuration);
-                    return Ok(jwtToken);
+                    UserLoginResponseDTO userLoginResponseDTO = new()
+                    {
+                        Token = AuthHelper.GenerateToken(user, roles.First(), _configuration)
+                    };
+                    return Ok(userLoginResponseDTO);
                 }
                 else
                 {

@@ -31,8 +31,6 @@ builder.Services
 })
 .AddJwtBearer(options =>
 {
-    options.SaveToken = true;
-    options.RequireHttpsMetadata = false;
     options.TokenValidationParameters = new TokenValidationParameters()
     {
         ValidateIssuer = true,
@@ -141,6 +139,8 @@ app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Airbnb.Web 
 app.UseHttpsRedirection();
 
 app.UseCors("MyAllowSpecificOrigins");
+
+app.UseAuthentication();
 
 app.UseAuthorization();
 
