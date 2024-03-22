@@ -4,11 +4,8 @@ namespace Airbnb.Model.DTO.Request
 {
     public class AirbnbRequestDTO
     {
-        public int CurrentPage { get; set; }
-        public int CardsPerPage { get; set; }
+        public PaginationModel PageInfo { get; set; } = new PaginationModel();
         public LocationModel CurrentLocation { get; set; } = new LocationModel();
-        public BoundModel? Bounds { get; set; }
-        public Guid? CategoryId { get; set; }
-        public SearchParamsModel? SearchParams { get; set; }
+        public SearchParamsModel SearchParams { get; set; } = new SearchParamsModel();
     }
 }

@@ -24,43 +24,43 @@ namespace Airbnb.Repository.Implementation
             int? dayRange = null;
             bool longTitle = false;
             bool showBeds = false;
-            if (airbnbRequestDTO.SearchParams != null)
-            {
-                if (airbnbRequestDTO.SearchParams.Bounds != null)
-                {
-                    longTitle = true;
-                    airbnbQuery = airbnbQuery.Where(airbnb => airbnb.Latitude <= airbnbRequestDTO.SearchParams.Bounds.North
-                    && airbnb.Latitude >= airbnbRequestDTO.SearchParams.Bounds.South
-                    && (airbnbRequestDTO.SearchParams.Bounds.East > airbnbRequestDTO.SearchParams.Bounds.West ?
-                    airbnb.Longitude <= airbnbRequestDTO.SearchParams.Bounds.East && airbnb.Longitude >= airbnbRequestDTO.SearchParams.Bounds.West :
-                    airbnb.Longitude <= airbnbRequestDTO.SearchParams.Bounds.East && airbnb.Longitude >= -180.0 || airbnb.Longitude <= 180.0 && airbnb.Longitude >= airbnbRequestDTO.SearchParams.Bounds.West)).AsQueryable();
-                }
-                if (airbnbRequestDTO.SearchParams.Guests != null && airbnbRequestDTO.SearchParams.Guests.Adults > 0)
-                {
-                    showBeds = true;
-                    airbnbQuery = airbnbQuery.Where(airbnb => airbnb.Guests >= airbnbRequestDTO.SearchParams.Guests.Adults).AsQueryable();
-                }
 
-                if (airbnbRequestDTO.SearchParams.StartDate != null && airbnbRequestDTO.SearchParams.EndDate != null)
-                {
-                    dayRange = (int)(airbnbRequestDTO.SearchParams.EndDate.Value.Date - airbnbRequestDTO.SearchParams.StartDate.Value.Date).TotalDays;
-                }
+            if (airbnbRequestDTO.SearchParams.Bounds != null)
+            {
+                longTitle = true;
+                airbnbQuery = airbnbQuery.Where(airbnb => airbnb.Latitude <= airbnbRequestDTO.SearchParams.Bounds.North
+                && airbnb.Latitude >= airbnbRequestDTO.SearchParams.Bounds.South
+                && (airbnbRequestDTO.SearchParams.Bounds.East > airbnbRequestDTO.SearchParams.Bounds.West ?
+                airbnb.Longitude <= airbnbRequestDTO.SearchParams.Bounds.East && airbnb.Longitude >= airbnbRequestDTO.SearchParams.Bounds.West :
+                airbnb.Longitude <= airbnbRequestDTO.SearchParams.Bounds.East && airbnb.Longitude >= -180.0
+                || airbnb.Longitude <= 180.0 && airbnb.Longitude >= airbnbRequestDTO.SearchParams.Bounds.West)).AsQueryable();
             }
 
-            if (airbnbRequestDTO.Bounds != null)
+            if (airbnbRequestDTO.SearchParams.Guests != null && airbnbRequestDTO.SearchParams.Guests.Adults > 0)
             {
-                airbnbQuery = airbnbQuery.Where(airbnb => airbnb.Latitude <= airbnbRequestDTO.Bounds.North
-                && airbnb.Latitude >= airbnbRequestDTO.Bounds.South
-                && (airbnbRequestDTO.Bounds.East > airbnbRequestDTO.Bounds.West ?
-                airbnb.Longitude <= airbnbRequestDTO.Bounds.East && airbnb.Longitude >= airbnbRequestDTO.Bounds.West :
-                airbnb.Longitude <= airbnbRequestDTO.Bounds.East && airbnb.Longitude >= -180.0 || airbnb.Longitude <= 180.0 && airbnb.Longitude >= airbnbRequestDTO.Bounds.West)
-                ).AsQueryable();
+                showBeds = true;
+                airbnbQuery = airbnbQuery.Where(airbnb => airbnb.Guests >= airbnbRequestDTO.SearchParams.Guests.Adults).AsQueryable();
             }
 
-            if (airbnbRequestDTO.CategoryId != null)
+            if (airbnbRequestDTO.SearchParams.StartDate != null && airbnbRequestDTO.SearchParams.EndDate != null)
             {
-                //airbnbQuery = airbnbQuery.Where(airbnb => airbnb.CategoryId.ToString() == airbnbDto.CategoryId);
+                dayRange = (int)(airbnbRequestDTO.SearchParams.EndDate.Value.Date - airbnbRequestDTO.SearchParams.StartDate.Value.Date).TotalDays;
             }
+
+            if (airbnbRequestDTO.SearchParams.CategoryId != null)
+            {
+                //airbnbQuery = airbnbQuery.Where(airbnb => airbnb.CategoryId == airbnbRequestDTO.SearchParams.CategoryId);
+            }
+
+            //if (airbnbRequestDTO.Bounds != null)
+            //{
+            //    airbnbQuery = airbnbQuery.Where(airbnb => airbnb.Latitude <= airbnbRequestDTO.Bounds.North
+            //    && airbnb.Latitude >= airbnbRequestDTO.Bounds.South
+            //    && (airbnbRequestDTO.Bounds.East > airbnbRequestDTO.Bounds.West ?
+            //    airbnb.Longitude <= airbnbRequestDTO.Bounds.East && airbnb.Longitude >= airbnbRequestDTO.Bounds.West :
+            //    airbnb.Longitude <= airbnbRequestDTO.Bounds.East && airbnb.Longitude >= -180.0 || airbnb.Longitude <= 180.0 && airbnb.Longitude >= airbnbRequestDTO.Bounds.West)
+            //    ).AsQueryable();
+            //}
 
             IQueryable<AirbnbCardModel> airbnbCards = airbnbQuery.Select(airbnb => new AirbnbCardModel()
             {
@@ -77,12 +77,7 @@ namespace Airbnb.Repository.Implementation
                 Beds = showBeds ? airbnb.Beds : null
             }).AsQueryable();
 
-            if (airbnbRequestDTO.CurrentPage > 0 && airbnbRequestDTO.CardsPerPage > 0)
-            {
-                int CurrentPage = airbnbRequestDTO.CurrentPage;
-                int CardsPerPage = airbnbRequestDTO.CardsPerPage;
-                airbnbCards = airbnbCards.Skip((CurrentPage - 1) * CardsPerPage).Take(CardsPerPage).AsQueryable();
-            }
+            airbnbCards = airbnbCards.Skip((airbnbRequestDTO.PageInfo.PageIndex - 1) * airbnbRequestDTO.PageInfo.PageSize).Take(airbnbRequestDTO.PageInfo.PageSize).AsQueryable();
 
             AirbnbResponseDTO airbnbResponseDTO = new()
             {
